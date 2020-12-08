@@ -1,0 +1,62 @@
+.ios .segment-select {
+  background: var(--ion-background-color);
+}
+
+.messageArea {
+  margin-top: 0px !important;
+  padding: 10px;
+  background: var(--interaction-background);
+  resize: none;
+  border-width: 0px;
+  padding-bottom: 25px;
+}
+
+.messageArea:focus {
+  outline: none !important;
+  border:1px solid var(--ion-color-light-tint);
+}
+
+.dropArea {
+  display: flex;
+  background: var(--interaction-background);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-style: dashed;
+  border-width: 2px;
+  border-color: var(--ion-color-medium);
+  color: var(--ion-color-medium);
+}
+
+.dropAreaMobile {
+  border-width: 0px !important;
+}
+
+.dropArea ion-input {
+  color: var(--ion-color-light);
+}
+
+.encryptionPw {
+  font-size: medium;
+}
+
+.dropAreaFilled {
+  padding: 15px;
+  display: flex;
+  background: var(--interaction-background);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--ion-color-medium);
+}
+
+.innerGrid {
+  display: grid;
+  grid-template-rows: 44px 50px auto;
+  gap: 8px;
+  height: 100%;
+}
+
+ion-segment.ios {
+  margin: 10px 0px;
+}

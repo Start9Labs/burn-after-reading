@@ -1,0 +1,131 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-img slot="start" class="headerImg" src="assets/icon/burn-after-reading.png"></ion-img>
+    <ion-title style="padding: 6px">
+      <ion-text>Burn After Reading</ion-text>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="{ shields: shields$ | async, state: $state$ | async } as vars">
+  <div class="framed-content">
+    <div class="shield top-shield" [class.no-top-shield]="!vars.shields">
+      <ion-label
+        *ngIf="vars.state === ReadViewState.ENCRYPTED"
+        class="ion-text-wrap label"
+        style="padding: 0px 12px; display: flex; justify-content: space-between; align-items: center"
+      >
+        <ion-input
+          [type]="decrypt.masked ? 'password' : 'text'"
+          [(ngModel)]="decrypt.value"
+          style="align-self: center; padding: 10px !important"
+          (keyup)="decryptOnEnter($event)"
+          placeholder="Decrypt"
+        ></ion-input>
+        <!-- Masking Button -->
+        <ion-button size="small" slot="end" fill="clear" (click)="decrypt.masked = !decrypt.masked">
+          <ion-icon slot="icon-only" [name]="decrypt.masked ? 'eye-outline' : 'eye-off-outline'" color="medium"></ion-icon>
+        </ion-button>
+
+        <ion-button
+          [disabled]="decrypt.value.length === 0"
+          size="small"
+          color="primary"
+          fill="outline"
+          style="align-self: center; justify-self: end"
+          (click)="decryptContent()"
+        >
+          View
+        </ion-button>
+      </ion-label>
+      <ion-label
+        *ngIf="vars.state === ReadViewState.NOT_ENCRYPTED"
+        class="ion-text-wrap label flex-center"
+        style="min-width: auto"
+      >
+        <ion-button fill="outline" color="primary" style="padding: 5px" (click)="viewContent()">
+          View
+        </ion-button>
+      </ion-label>
+      <ion-label class="label burn-label" *ngIf="vars.state === ReadViewState.BURNED">
+        There's nothing here! Perhaps there never was...
+      </ion-label>
+    </div>
+    <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
+    <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
+    <div class="shield bottom-shield" [class.no-bottom-shield]="!vars.shields"></div>
+
+    <!-- no shields -->
+    <div style="height: 100%;" *ngIf="presentableContent">
+      <div *ngIf="presentableContent.contentMessage" style="height: 100%; ">
+        <div class="messageArea" [class.areaBurnup]="burnup" readonly>
+          {{ presentableContent.contentMessage }}
+        </div>
+        <ion-label style="display: flex; justify-content: flex-end">
+          <ion-button
+            [disabled]="burnup"
+            style="
+              border-style: solid;
+              border-width: 0px 1px 0px 0px;
+              border-color: #8f9198;
+              margin-right: -2px;
+            "
+            fill="clear"
+            size="small"
+            (click)="copy(presentableContent.contentMessage)"
+          >
+            <ion-icon color="primary" name="copy-outline"></ion-icon>
+          </ion-button>
+          <ion-button
+            [disabled]="burnup" fill="clear" color="primary" size="small" (click)="downloadBlob()">
+            Download ({{ presentableContent.readableSize }})
+          </ion-button>
+        </ion-label>
+      </div>
+
+      <div *ngIf="presentableContent.contentImage" style="height: 100%; display: flex; flex-direction: column;">
+        <div class="fileArea" [class.areaBurnup]="burnup" style="height: 95%">
+          <img [src]="presentableContent.contentImage" style="
+            border: 0; max-height: 90%; min-height: 50%; max-width: 98%; min-width: 50%;" [class.imageBurnup]="burnup">
+        </div>
+        <ion-button [disabled]="burnup" fill="clear" color="primary" size="small" (click)="downloadBlob()">
+          Download ({{ presentableContent.readableSize }})
+        </ion-button>
+      </div>
+
+      <div *ngIf="!presentableContent.contentMessage && !presentableContent.contentImage" class="fileArea" [class.areaBurnup]="burnup" readonly>
+        <ion-button
+          [disabled]="burnup"
+          style="height: 15vh; max-width: 85%"
+          color="primary"
+          fill="outline"
+          [class.buttonBurnup]="burnup"
+          (click)="downloadBlob()"
+        >
+          <ion-label class="ion-text-wrap">
+            <h4 color="medium">Download</h4>
+            <h4 color="medium">
+              {{ presentableContent.title }} ({{ presentableContent.readableSize }})
+            </h4>
+          </ion-label>
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>
+<ion-footer *ngIf="{ shields: shields$ | async, state: $state$ | async } as vars">
+  <div *ngIf="presentableContent && !vars.shields" style="position: absolute; z-index: 1; margin: 10px 15px; overflow: visible; white-space: break-spaces;">
+    <ion-text style="font-size: smaller" color="medium">
+      This content will be burned as soon as you leave the page.
+      <a style="cursor: pointer;" (click)="burnNow()">
+        <ion-text style="font-style: italic" color="primary">
+          Burn Now
+        </ion-text>
+      </a>
+    </ion-text>
+  </div>
+  <!-- Keeps the bottom footer the right height -->
+  <div class="btnRight invisible">
+    <ion-button></ion-button>
+  </div>
+</ion-footer>

@@ -1,0 +1,191 @@
+<ion-header *ngIf="{ state: $state$ | async } as vars">
+  <ion-toolbar class="top-bar">
+    <ion-img slot="start" class="headerImg" src="assets/icon/burn-after-reading.png"></ion-img>
+    <ion-title style="padding: 6px">
+      <ion-text>Burn After Reading</ion-text>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button size="small" color="medium" *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
+        Logout
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+
+<ion-content
+  *ngIf="{ shields: shields$ | async, state: $state$ | async, app: config.appType } as vars"
+  style="--overflow: hidden"
+>
+  <!-- Framed Content -->
+  <div class="framed-content">
+    <div class="shield top-shield" [class.no-top-shield]="!vars.shields"
+      style="flex-direction: column; justify-content: space-evenly"
+    >
+      <ion-label
+        *ngIf="vars.state === WriteViewState.FINISHED"
+        class="ion-text-wrap label"
+        style="padding: 10px; max-width: 95%"
+      >
+        <ion-text color="medium" style="font-size: small"
+          >Your content is accessible at the following address:</ion-text
+        >
+        <div class="url-label">
+          <div style="align-self: center">{{ url }}</div>
+          <ion-button
+            slot="icon-only"
+            style="place-self: center; margin: 0px; "
+            (click)="copy(url)"
+            fill="clear"
+          >
+            <ion-icon color="primary" name="copy-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-label>
+
+      <ion-label
+        *ngIf="vars.state === WriteViewState.UNAUTH"
+        class="label"
+        style="padding: 12px; display: flex; justify-content: space-between"
+      >
+        <ion-input
+          id="login-input"
+          [type]="auth.masked ? 'password' : 'text'"
+          [(ngModel)]="auth.value"
+          placeholder="Password"
+          (keyup)="loginOnEnter($event)"
+        ></ion-input>
+        <ion-button size="small" slot="end" fill="clear" (click)="auth.masked = !auth.masked">
+          <ion-icon slot="icon-only" [name]="auth.masked ? 'eye-outline' : 'eye-off-outline'" color="medium"></ion-icon>
+        </ion-button>
+        <ion-button
+          [disabled]="auth.value.length === 0"
+          color="primary"
+          size="small"
+          (click)="login()"
+          fill="outline"
+        >
+          Login
+        </ion-button>
+      </ion-label>
+    </div>
+    <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
+    <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
+    <div class="shield bottom-shield" [class.no-bottom-shield]="!vars.shields"></div>
+
+    <!-- beneath the shields -->
+    <div class="innerGrid">
+      <ion-item lines="none" style="--background: #040404">
+        <ion-input
+          [type]="encrypt.masked ? 'password' : 'text'"
+          [(ngModel)]="encrypt.value"
+          placeholder="Encrypt (optional)"
+          class="encryptionPw"
+        ></ion-input>
+        <ion-button slot="end" fill="clear" (click)="encrypt.masked = !encrypt.masked">
+          <ion-icon
+            slot="icon-only"
+            [name]="encrypt.masked ? 'eye-outline' : 'eye-off-outline'"
+            color="medium"
+          ></ion-icon>
+        </ion-button>
+      </ion-item>
+
+      <ion-segment
+        [(ngModel)]="upload.segment"
+        class="segment-select"
+        color="primary"
+        (ionChange)="segmentChanged()"
+      >
+        <ion-segment-button value="message">
+          <ion-label>Message</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="file">
+          <ion-label>File</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <!-- message -->
+      <div *ngIf="upload.segment === 'message'">
+        <textarea
+          class="messageArea"
+          [(ngModel)]="upload.message"
+          placeholder="Message"
+          style="height: 100%; width: 100%"
+        >
+        </textarea>
+        <ion-button *ngIf="keyboardOpen" expand="block" color="medium" style="
+          position: relative;
+          height: 12px;
+          top: -13px;
+          margin: 0px;
+          padding: 0px;
+          --border-radius: 0px;
+          font-size: x-small;
+          border-style: outset;
+          border-width: 0.5px;
+          border-color: black;
+        " (click)="dismissKeyboard()">Dismiss Keyboard
+        <ion-input id="blur-me" style="opacity: 0; position:absolute; height: 0; width: 0;"></ion-input>
+        </ion-button>
+      </div>
+      <!-- file -->
+      <div
+        *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && !upload.file"
+        class="dropArea" [class.dropAreaMobile] = 'config.isMobile'
+        appDnd
+        (onFileDropped)="handleFileDrop($event)"
+      >
+        <ion-icon
+          name="cloud-upload-outline"
+          color="medium"
+          style="font-size: 42px"
+        ></ion-icon>
+        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File Here'}}</h4>
+        <h4 *ngIf="!config.isMobile" color="medium">or</h4>
+        <br />
+        <ion-button fill="outline" color="primary" type="file">
+          <label for="upload-photo">Browse</label>
+          <input
+            type="file"
+            style="position: absolute; opacity: 0; height: 100%"
+            id="upload-photo"
+            (change)="handleFileInput($event)"
+          />
+        </ion-button>
+      </div>
+      <!-- file uploaded -->
+      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment ==='file' && upload.file">
+        <h4 style="text-align: center">{{ upload.file.name }}</h4>
+        <h6>{{ upload.readableFileSize }}</h6>
+        <br />
+        <ion-button
+          fill="outline"
+          color="danger"
+          (click)="upload.file = null"
+          >Remove</ion-button
+        >
+      </div>
+      <div class="dropAreaFilled" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
+        <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
+        <h4 style="text-align: center">File uploads not supported in this demo version</h4>
+      </div>
+    </div>
+  </div>
+
+</ion-content>
+<ion-footer *ngIf="{ state: $state$ | async } as vars" class="bottom-bar">
+
+  <div class="btnRight">
+    <ion-button class="invisible" disabled="true" fill="outline" color="primary">New</ion-button>
+    <ion-button *ngIf="vars.state === WriteViewState.WRITING"
+      [disabled]="(!upload.message && !upload.file) || (shields$ | async)"
+      (click)="save()"
+      fill="outline"
+      color="primary"
+    >
+      Save
+    </ion-button>
+    <ion-button *ngIf="vars.state === WriteViewState.FINISHED" (click)=newPaste() fill="outline" color="primary">New</ion-button>
+  </div>
+</ion-footer>

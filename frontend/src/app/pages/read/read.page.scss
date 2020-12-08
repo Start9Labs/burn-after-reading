@@ -1,0 +1,54 @@
+.messageArea {
+  margin-bottom: 5px;
+  padding: 15px;
+  background: var(--interaction-background);
+  max-height: 90%;
+  overflow: scroll;
+}
+
+.fileArea {
+  height: 100%;
+  background: var(--interaction-background);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.dropArea {
+  height: 65vh;
+  display: flex;
+  background: var(--interaction-background);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--ion-color-medium);
+  border-style: dashed;
+  border-width: 1px;
+  border-color: var(--ion-color-medium);
+}
+
+.burn-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  max-width: 85%;
+  text-align: center;
+  line-height: 24px;
+}
+
+.areaBurnup {
+  background: #FFF4D6;
+  transition: 1s cubic-bezier(0.26, 0.74, 0.4, 0.88) all;
+}
+
+.imageBurnup {
+  opacity: 0;
+  transition: 1s cubic-bezier(0.26, 0.74, 0.4, 0.88) all;
+}
+
+.buttonBurnup {
+  opacity: 0;
+  transition: 1s cubic-bezier(0.26, 0.74, 0.4, 0.88) all;
+}

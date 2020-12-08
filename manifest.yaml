@@ -1,0 +1,19 @@
+compat: v0
+id: burn-after-reading
+version: 0.1.0
+os-version-required: ">=0.2.4"
+os-version-recommended: ">=0.2.4"
+title: "Burn After Reading"
+description:
+  short: Share private links that contain self-destructing messages
+  long: A simple, fast, standalone, self-destructing pastebin service for sharing private information with other human beings. Simply type your message, choose your expiration and self-destruction rules, and share the ephemeral link. Your message never leaves the confines of your physical Embassy device.
+release-notes: Initial Release
+ports:
+  - internal: 80
+    tor: 80
+image:
+  type: tar
+mount: /root
+has-instructions: false
+assets: []
+hidden-service-version: v3
