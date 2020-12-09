@@ -144,6 +144,16 @@ export class WritePage extends ViewUtils implements OnInit {
     })
   }
 
+  async presentAlertEncrypt () {
+    const alert = await this.alertController.create({
+      header: 'Encrypt',
+      message: 'You may encrypt your message/file with a password. Encryption is performed in the browser before being sent to the server. This password will be required to decrypt the message/file.',
+      buttons: ['Close'],
+    })
+
+    await alert.present()
+  }
+
   handleFileDrop (e: any) {
     const files = e.dataTransfer.files
     if (!files) return

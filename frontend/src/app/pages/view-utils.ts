@@ -64,7 +64,7 @@ export class ViewUtils {
         cssClass: 'alert-demo',
         header: 'Warning',
         backdropDismiss: false,
-        message: `<h6>This is a hosted instance of Burn After Reading, intended for <i>demo purposes</i>.</h6>
+        message: `<h6>This is a <i>hosted</i> instance of Burn After Reading.</h6>
                   <p>We do not recommend using it, or any hosted software for that matter.</p>
                   <p>You can run your own, private instance over Tor with the click of a button using the Start9 Emabssy.</p>`,
         buttons: [
