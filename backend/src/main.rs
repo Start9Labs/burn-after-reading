@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::future::Future;
 use std::marker::Unpin;
 use std::path::Path;
@@ -258,18 +259,28 @@ async fn data(
     method: Method,
 ) -> Result<Response<Body>, Error> {
     match method {
-        Method::GET => match (data_tree.get(&key)?, content_type_tree.get(&key)?) {
-            (Some(data), Some(content_type)) => {
+        Method::GET => match (
+            data_tree.get(&key)?,
+            content_type_tree.get(&key)?,
+            expiration_tree.get(&key)?,
+        ) {
+            (Some(data), Some(content_type), Some(expiration))
+                if SystemTime::now()
+                    < (UNIX_EPOCH
+                        + Duration::from_secs(u64::from_be_bytes(
+                            expiration.as_ref().try_into()?,
+                        ))) =>
+            {
                 if data.is_empty() {
                     let mut file = tokio::fs::File::open(Path::new("big").join(&key)).await?;
                     let len = file.metadata().await?.len();
                     let stream: Box<
                         dyn Stream<
-                                Item = Result<
-                                    Bytes,
-                                    Box<dyn std::error::Error + 'static + Sync + Send>,
-                                >,
-                            >
+                            Item = Result<
+                                Bytes,
+                                Box<dyn std::error::Error + 'static + Sync + Send>,
+                            >,
+                        >
                             + 'static
                             + Send,
                     > = Box::new(futures::stream::poll_fn(move |cx| {
@@ -308,8 +319,7 @@ async fn data(
                         .unwrap())
                 }
             }
-            (Some(data), None) => Ok(ok().body(data.to_vec().into()).unwrap()),
-            (None, _) => Err(Error::Status(StatusCode::NOT_FOUND)),
+            _ => Err(Error::Status(StatusCode::NOT_FOUND)),
         },
         Method::DELETE => {
             content_type_tree.remove(&key)?;
@@ -323,6 +333,7 @@ async fn data(
             futures::try_join!(
                 data_tree.flush_async().map_err(Error::from),
                 content_type_tree.flush_async().map_err(Error::from),
+                expiration_tree.flush_async().map_err(Error::from),
                 rm.map_err(Error::from)
             )?;
             Ok(no_content())
@@ -589,170 +600,170 @@ async fn main() -> Result<(), AnyError> {
             tokio::time::delay_for(HOUR).await;
         }
     });
-    warp::serve(
-        warp::path!("api" / "data" / String)
+    let filter = warp::filters::any::any()
+        .and_then(|| async { Err::<Response<Body>, _>(warp::reject::reject()) })
+        .or(warp::path!("api" / "data" / String)
             .and(warp::method())
             .and_then(move |key, method| {
                 let data_tree = data_tree.clone();
                 let content_type_tree = content_type_tree.clone();
                 let expiration_tree = expiration_tree.clone();
                 failable(move || data(data_tree, content_type_tree, expiration_tree, key, method))
-            })
-            .or(warp::path!("api" / "data")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::cookie("session"))
-                .and(warp::header("content-type"))
-                .and(warp::header::optional("x-paste-expiration"))
-                .and(warp::body::content_length_limit(1_u64 << 20_u64))
-                .and(warp::body::bytes())
-                .and_then(
-                    move |session, content_type, expiration: Option<u64>, body| {
-                        let sesh_tree_data_small = sesh_tree_data_small.clone();
-                        let new_data_small_tree = new_data_small_tree.clone();
-                        let new_content_type_small_tree = new_content_type_small_tree.clone();
-                        let new_expiration_small_tree = new_expiration_small_tree.clone();
-                        failable(move || {
-                            authenticate(sesh_tree_data_small, session, move |_| {
-                                new_data_small(
-                                    new_data_small_tree,
-                                    new_content_type_small_tree,
-                                    new_expiration_small_tree,
-                                    content_type,
-                                    expiration.unwrap_or_else(|| {
-                                        (SystemTime::now()
-                                            .duration_since(UNIX_EPOCH)
-                                            .unwrap_or(Duration::from_secs(0))
-                                            + DAY)
-                                            .as_secs()
-                                    }),
-                                    body,
-                                )
-                            })
-                            .map_ok(|hash| ok_json(&NewDataRes { hash }))
+            }))
+        .or(warp::path!("api" / "data")
+            .and(warp::path::end())
+            .and(warp::post())
+            .and(warp::cookie("session"))
+            .and(warp::header("content-type"))
+            .and(warp::header::optional("x-paste-expiration"))
+            .and(warp::body::content_length_limit(1_u64 << 20_u64))
+            .and(warp::body::bytes())
+            .and_then(
+                move |session, content_type, expiration: Option<u64>, body| {
+                    let sesh_tree_data_small = sesh_tree_data_small.clone();
+                    let new_data_small_tree = new_data_small_tree.clone();
+                    let new_content_type_small_tree = new_content_type_small_tree.clone();
+                    let new_expiration_small_tree = new_expiration_small_tree.clone();
+                    failable(move || {
+                        authenticate(sesh_tree_data_small, session, move |_| {
+                            new_data_small(
+                                new_data_small_tree,
+                                new_content_type_small_tree,
+                                new_expiration_small_tree,
+                                content_type,
+                                expiration.unwrap_or_else(|| {
+                                    (SystemTime::now()
+                                        .duration_since(UNIX_EPOCH)
+                                        .unwrap_or(Duration::from_secs(0))
+                                        + DAY)
+                                        .as_secs()
+                                }),
+                                body,
+                            )
                         })
-                    },
-                ))
-            .or(warp::path!("api" / "data")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::cookie("session"))
-                .and(warp::header("content-type"))
-                .and(warp::header::optional("x-paste-expiration"))
-                .and(warp::body::stream())
-                .and_then(
-                    move |session, content_type, expiration: Option<u64>, body| {
-                        let sesh_tree_data = sesh_tree_data.clone();
-                        let new_data_tree = new_data_tree.clone();
-                        let new_content_type_tree = new_content_type_tree.clone();
-                        let new_expiration_tree = new_expiration_tree.clone();
-                        failable(move || {
-                            authenticate(sesh_tree_data, session, move |_| {
-                                new_data(
-                                    new_data_tree,
-                                    new_content_type_tree,
-                                    new_expiration_tree,
-                                    content_type,
-                                    expiration.unwrap_or_else(|| {
-                                        (SystemTime::now()
-                                            .duration_since(UNIX_EPOCH)
-                                            .unwrap_or(Duration::from_secs(0))
-                                            + DAY)
-                                            .as_secs()
-                                    }),
-                                    body,
-                                )
-                            })
-                            .map_ok(|hash| ok_json(&NewDataRes { hash }))
-                        })
-                    },
-                ))
-            .or(warp::path!("api" / "data")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::cookie("session"))
-                .map(|_| bad_request("Missing Content-Type")))
-            .or(warp::path!("api" / "data")
-                .and(warp::path::end())
-                .and(warp::post())
-                .map(unauthorized))
-            .or(warp::path!("api" / "data")
-                .and(warp::path::end())
-                .map(method_not_allowed))
-            .or(warp::path!("api" / "login")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::body::json())
-                .and_then(move |login_info| {
-                    let pwds_tree = pwds_tree.clone();
-                    let sesh_tree = sesh_tree.clone();
-                    failable(move || login(pwds_tree, sesh_tree, login_info))
-                }))
-            .or(warp::path!("api" / "login")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::header::exact("content-type", "application/json"))
-                .and(warp::body::bytes())
-                .map(|body: Bytes| {
-                    if let Err(e) = serde_json::from_slice::<Login>(&*body) {
-                        bad_request(e)
-                    } else {
-                        internal_server_error("Unknown Error")
+                        .map_ok(|hash| ok_json(&NewDataRes { hash }))
+                    })
+                },
+            ));
+    #[cfg(not(feature = "demo"))]
+    let filter = filter.or(warp::path!("api" / "data")
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(warp::cookie("session"))
+        .and(warp::header("content-type"))
+        .and(warp::header::optional("x-paste-expiration"))
+        .and(warp::body::stream())
+        .and_then(
+            move |session, content_type, expiration: Option<u64>, body| {
+                let sesh_tree_data = sesh_tree_data.clone();
+                let new_data_tree = new_data_tree.clone();
+                let new_content_type_tree = new_content_type_tree.clone();
+                let new_expiration_tree = new_expiration_tree.clone();
+                failable(move || {
+                    authenticate(sesh_tree_data, session, move |_| {
+                        new_data(
+                            new_data_tree,
+                            new_content_type_tree,
+                            new_expiration_tree,
+                            content_type,
+                            expiration.unwrap_or_else(|| {
+                                (SystemTime::now()
+                                    .duration_since(UNIX_EPOCH)
+                                    .unwrap_or(Duration::from_secs(0))
+                                    + DAY)
+                                    .as_secs()
+                            }),
+                            body,
+                        )
+                    })
+                    .map_ok(|hash| ok_json(&NewDataRes { hash }))
+                })
+            },
+        ));
+    let filter = filter
+        .or(warp::path!("api" / "data")
+            .and(warp::path::end())
+            .and(warp::post())
+            .and(warp::cookie("session"))
+            .map(|_| bad_request("Missing Content-Type")))
+        .or(warp::path!("api" / "data")
+            .and(warp::path::end())
+            .and(warp::post())
+            .map(unauthorized))
+        .or(warp::path!("api" / "data")
+            .and(warp::path::end())
+            .map(method_not_allowed))
+        .or(warp::path!("api" / "login")
+            .and(warp::path::end())
+            .and(warp::post())
+            .and(warp::body::json())
+            .and_then(move |login_info| {
+                let pwds_tree = pwds_tree.clone();
+                let sesh_tree = sesh_tree.clone();
+                failable(move || login(pwds_tree, sesh_tree, login_info))
+            }))
+        .or(warp::path!("api" / "login")
+            .and(warp::path::end())
+            .and(warp::post())
+            .and(warp::header::exact("content-type", "application/json"))
+            .and(warp::body::bytes())
+            .map(|body: Bytes| {
+                if let Err(e) = serde_json::from_slice::<Login>(&*body) {
+                    bad_request(e)
+                } else {
+                    internal_server_error("Unknown Error")
+                }
+            }))
+        .or(warp::path!("api" / "login")
+            .and(warp::path::end())
+            .and(warp::post())
+            .map(|| bad_request("Content-Type must be application/json")))
+        .or(warp::path!("api" / "login")
+            .and(warp::path::end())
+            .map(method_not_allowed))
+        .or(warp::path!("api" / "logout")
+            .and(warp::path::end())
+            .and(warp::post())
+            .and(warp::cookie("session"))
+            .and_then(move |session| {
+                let sesh_tree_login = sesh_tree_login.clone();
+                failable(move || logout(sesh_tree_login, session))
+            }))
+        .or(warp::path!("api" / "logout")
+            .and(warp::path::end())
+            .and(warp::post())
+            .map(no_content))
+        .or(warp::path!("api" / "logout")
+            .and(warp::path::end())
+            .map(method_not_allowed))
+        .or(warp::path("api").map(not_found))
+        .or(warp::method()
+            .and(warp::path::full())
+            .and(warp::header::headers_cloned())
+            .map(|method, path: warp::path::FullPath, headers| {
+                match RESPONDER.parts_respond_or_error(
+                    &method,
+                    &path.as_str().parse().unwrap(),
+                    &headers,
+                ) {
+                    Ok(mut res) => {
+                        res.headers_mut()
+                            .insert("X-Consulate-App-ID", APP_ID.clone());
+                        res.headers_mut()
+                            .insert("X-Consulate-App-Version", APP_VERSION.clone());
+                        res
                     }
-                }))
-            .or(warp::path!("api" / "login")
-                .and(warp::path::end())
-                .and(warp::post())
-                .map(|| bad_request("Content-Type must be application/json")))
-            .or(warp::path!("api" / "login")
-                .and(warp::path::end())
-                .map(method_not_allowed))
-            .or(warp::path!("api" / "logout")
-                .and(warp::path::end())
-                .and(warp::post())
-                .and(warp::cookie("session"))
-                .and_then(move |session| {
-                    let sesh_tree_login = sesh_tree_login.clone();
-                    failable(move || logout(sesh_tree_login, session))
-                }))
-            .or(warp::path!("api" / "logout")
-                .and(warp::path::end())
-                .and(warp::post())
-                .map(no_content))
-            .or(warp::path!("api" / "logout")
-                .and(warp::path::end())
-                .map(method_not_allowed))
-            .or(warp::path("api").map(not_found))
-            .or(warp::method()
-                .and(warp::path::full())
-                .and(warp::header::headers_cloned())
-                .map(|method, path: warp::path::FullPath, headers| {
-                    match RESPONDER.parts_respond_or_error(
-                        &method,
-                        &path.as_str().parse().unwrap(),
-                        &headers,
-                    ) {
-                        Ok(mut res) => {
-                            res.headers_mut()
-                                .insert("X-Consulate-App-ID", APP_ID.clone());
-                            res.headers_mut()
-                                .insert("X-Consulate-App-Version", APP_VERSION.clone());
-                            res
-                        }
-                        Err(ResponderError::LoaderPathNotFound) => {
-                            let mut res =
-                                RESPONDER.parts_respond(&method, &*ERROR_PAGE_404, &headers);
-                            res.headers_mut()
-                                .insert("X-Consulate-App-ID", APP_ID.clone());
-                            res.headers_mut()
-                                .insert("X-Consulate-App-Version", APP_VERSION.clone());
-                            res
-                        }
-                        Err(e) => e.as_default_response(),
+                    Err(ResponderError::LoaderPathNotFound) => {
+                        let mut res = RESPONDER.parts_respond(&method, &*ERROR_PAGE_404, &headers);
+                        res.headers_mut()
+                            .insert("X-Consulate-App-ID", APP_ID.clone());
+                        res.headers_mut()
+                            .insert("X-Consulate-App-Version", APP_VERSION.clone());
+                        res
                     }
-                })),
-    )
-    .bind(([0, 0, 0, 0], 80))
-    .await;
+                    Err(e) => e.as_default_response(),
+                }
+            }));
+    warp::serve(filter).bind(([0, 0, 0, 0], 80)).await;
     Ok(())
 }

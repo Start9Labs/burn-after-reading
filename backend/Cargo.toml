@@ -5,6 +5,9 @@ authors = ["Aiden McClelland <me@drbonez.dev>"]
 edition = "2018"
 description = "A simple, fast, standalone, self-destructing pastebin service for sharing private information with other human beings. Simply type your message, choose your expiration and self-destruction rules, and share the ephemeral link. Your message never leaves the confines of your physical Embassy device."
 
+[features]
+demo = []
+
 [dependencies]
 anyhow = "1.0.34"
 async-compat = "0.1.4"
