@@ -169,3 +169,8 @@
 .alert-demo .alert-wrapper .alert-message {
   max-height: 70vh !important;
 }
+
+ion-item { 
+  --highlight-color-valid: var(--ion-color-primary); // valid underline color
+
+ }

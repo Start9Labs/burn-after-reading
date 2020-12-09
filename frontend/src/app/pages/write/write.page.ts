@@ -6,7 +6,7 @@ import { LoginService } from 'src/app/services/login.service'
 import { LoaderService } from 'src/app/services/loader.service'
 import { AuthState, AuthStore } from 'src/app/services/auth.store'
 import { AlertController, ToastController } from '@ionic/angular'
-import { Kila, Mega, pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
+import { Kila, Mega, modulateTime, pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
 import { addPrefix, Paste } from 'src/app/services/paste/paste'
 import { ApiService } from 'src/app/services/api/api.service'
 import { ViewUtils } from '../view-utils'
@@ -46,6 +46,9 @@ export class WritePage extends ViewUtils implements OnInit {
 
   url: string
 
+  expirationOptions: { [key: string]: ExpirationOption }
+  selectedExpiration: string //a key of the above
+
   constructor (
     config: ConfigService,
     private readonly loginService: LoginService,
@@ -58,6 +61,15 @@ export class WritePage extends ViewUtils implements OnInit {
   ) { super(toastController, alertController, config, sanitizer) }
 
   ngOnInit () {
+    this.expirationOptions = {
+      week: { display: '1 Week', count: 7, unit: 'days', disabled: this.config.isDemo },
+      someDays: { display: '3 Days', count: 3, unit: 'days', disabled: this.config.isDemo },
+      day: { display: '1 Day', count: 1, unit: 'days' },
+      hours: { display: '6 Hours', count: 6, unit: 'hours' },
+      minutes: { display: '10 minutes', count: 10, unit: 'minutes' },
+    }
+    this.selectedExpiration = 'day'
+
     this.reset()
     if (this.config.isIos) {
       this.cleanup(
@@ -103,7 +115,7 @@ export class WritePage extends ViewUtils implements OnInit {
     }
 
     this.upload = {
-      segment, // 'message' | 'file'
+      segment,
       message: '',
       file: null,
       readableFileSize: '',
@@ -144,6 +156,26 @@ export class WritePage extends ViewUtils implements OnInit {
     })
   }
 
+  async presentAlertEncrypt () {
+    const alert = await this.alertController.create({
+      header: 'Encrypt',
+      message: 'You may encrypt your message/file with a secret passphrase. Encryption is performed in the browser before being sent to the server. This passphrase will be required to decrypt the message/file.',
+      buttons: ['Close'],
+    })
+
+    await alert.present()
+  }
+
+  async presentAlertEncryptionRequired () {
+    const alert = await this.alertController.create({
+      header: 'Encryption Required',
+      message: 'You must encrypt your message in this demo',
+      cssClass: 'error-alert'
+    })
+
+    await alert.present()
+  }
+
   handleFileDrop (e: any) {
     const files = e.dataTransfer.files
     if (!files) return
@@ -180,12 +212,16 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   async save () {
+    if(this.config.isDemo && !this.encrypt.value) {
+      return this.presentAlertEncryptionRequired()
+    }
+
     if (this.encrypt.value && this.upload.file) {
       const go = await this.checkEncryptedFileSizeRestrictions(this.upload.file)
       if (!go) return
     }
 
-    this.loaderService.of({
+    return this.loaderService.of({
       spinner: 'lines',
       message: 'This could take a while...',
       waitFor: 250,
@@ -207,11 +243,10 @@ export class WritePage extends ViewUtils implements OnInit {
         await encryptArrayBuffer(content, this.encrypt.value),
       )
 
-      const res = await this.apiService.newPaste(paste)
+      const res = await this.apiService.newPaste(paste, this.getExpireAt())
       this.setUrl(res.hash),
       this.$state$.next(WriteViewState.FINISHED)
       this.reset()
-
     }).catch(e => this.alertError(e))
   }
 
@@ -219,6 +254,12 @@ export class WritePage extends ViewUtils implements OnInit {
     console.log('dismissing')
     const d = document.getElementById('blur-me')
     return d && d.blur()
+  }
+
+  getExpireAt(): Date {
+    const now = new Date()
+    const {count, unit} = this.expirationOptions[this.selectedExpiration]
+    return modulateTime(now, count, unit)
   }
 
   private async checkEncryptedFileSizeRestrictions (f: File): Promise<boolean> {
@@ -312,4 +353,11 @@ export enum FileTShirtSize {
   DEMO_LARGE = 10 * Kila,
   MEDIUM = 2.5 * Mega,
   LARGE = 50 * Mega,
+}
+
+type ExpirationOption = {
+  display: string,
+  unit: 'days' | 'hours' | 'minutes' | 'seconds',
+  count: number,
+  disabled?: boolean
 }

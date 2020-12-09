@@ -63,9 +63,7 @@ export class LiveApi extends ApiService {
         }
     }
 
-    async newPaste (p: Paste): Promise<{ hash: string }> {
-        const now = new Date()
-        const expireAt = modulateTime(now, 24 * 7, 'hours')
+    async newPaste (p: Paste, expireAt: Date): Promise<{ hash: string }> {
         const epochSec = Math.floor( expireAt.getTime() / 1000 )
         const res = await this.fetchAuth(`/api/data`, {
             method: 'POST',

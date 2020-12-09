@@ -24,6 +24,7 @@ export class MockApi extends ApiService {
                 'text/plain',
                 await encryptArrayBuffer(addPrefix(content, 'MyPasteBB'), 'abc'),
             ),
+            new Date()
         )
     }
 
@@ -51,7 +52,7 @@ export class MockApi extends ApiService {
         this.pastes.delete(hash)
     }
 
-    async newPaste (paste: Paste): Promise<{ hash: string }> {
+    async newPaste (paste: Paste, expireAt: Date): Promise<{ hash: string }> {
         this.hash ++
         this.pastes.set(String(this.hash), paste)
         return { hash: String(this.hash) }

@@ -6,8 +6,8 @@
       <div *ngIf="config.isDemo"><img style="max-width: 80px" src="assets/icon/s9-full.png"/></div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button size="small" color="medium" *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
-        Logout
+      <ion-button *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
+        <ion-icon slot="icon-only" name="log-out-outline" color="medium"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -75,43 +75,55 @@
 
     <!-- beneath the shields -->
     <div class="innerGrid">
-      <ion-item lines="none" style="--background: #040404">
-        <ion-input
-          [type]="encrypt.masked ? 'password' : 'text'"
-          [(ngModel)]="encrypt.value"
-          [placeholder]="config.isDemo ? 'Encrypt' : 'Encrypt (optional)'"
-          class="encryptionPw"
-        ></ion-input>
-        <ion-button slot="end" fill="clear" (click)="encrypt.masked = !encrypt.masked">
-          <ion-icon
-            slot="icon-only"
-            [name]="encrypt.masked ? 'eye-outline' : 'eye-off-outline'"
-            color="medium"
-          ></ion-icon>
-        </ion-button>
-      </ion-item>
+      <ion-list style="padding: 0px; flex: 0 1 auto;">
+        <ion-item style="--background: #040404; font-size:small">
+          <ion-icon style="margin-right: 10px; margin-left: -5px;" slot="start" (click)="presentAlertEncrypt()" size="small" name="help-circle-outline" color="primary"></ion-icon>
+          <ion-input
+            [type]="encrypt.masked ? 'password' : 'text'"
+            [(ngModel)]="encrypt.value"
+            placeholder="Encrypt (optional)"
+            class="encryptionPw"
+          ></ion-input>
+          <ion-button slot="end" fill="clear" (click)="encrypt.masked = !encrypt.masked">
+            <ion-icon
+              slot="icon-only"
+              [name]="encrypt.masked ? 'eye-outline' : 'eye-off-outline'"
+              color="medium"
+            ></ion-icon>
+          </ion-button>
+        </ion-item>
 
-      <ion-segment
-        [(ngModel)]="upload.segment"
-        class="segment-select"
-        color="primary"
-        (ionChange)="segmentChanged()"
-      >
-        <ion-segment-button value="message">
-          <ion-label>Message</ion-label>
-        </ion-segment-button>
-        <ion-segment-button value="file">
-          <ion-label>File</ion-label>
-        </ion-segment-button>
-      </ion-segment>
+        <ion-item style="--background: #040404; font-size: small" lines=none>
+          <ion-label>Burns Automatically In</ion-label>
+          <ion-select [(ngModel)]="selectedExpiration">
+            <ion-select-option *ngFor="let option of expirationOptions | keyvalue" [value]="option.key" [disabled]="option.value.disabled">{{option.value.display}}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-list>
+
+      <div style="flex: 0 1 55px;">
+        <ion-segment
+          [(ngModel)]="upload.segment"
+          class="segment-select"
+          color="primary"
+          (ionChange)="segmentChanged()"
+        >
+          <ion-segment-button value="message">
+            <ion-label>Message</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="file">
+            <ion-label>File</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
 
       <!-- message -->
-      <div *ngIf="upload.segment === 'message'">
+      <div class="expand-to-fill" *ngIf="upload.segment === 'message'">
         <textarea
           [maxlength]="config.isDemo ? 10000 : 'none'"
           class="messageArea"
           [(ngModel)]="upload.message"
-          placeholder="Message"
+          placeholder="Type Message"
           style="height: 100%; width: 100%"
         >
         </textarea>
@@ -133,7 +145,7 @@
       <!-- file -->
       <div
         *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && !upload.file"
-        class="dropArea" [class.dropAreaMobile] = 'config.isMobile'
+        class="dropArea expand-to-fill" [class.dropAreaMobile] = 'config.isMobile'
         appDnd
         (onFileDropped)="handleFileDrop($event)"
       >
@@ -142,7 +154,7 @@
           color="medium"
           style="font-size: 42px"
         ></ion-icon>
-        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File Here'}}</h4>
+        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File'}}</h4>
         <h4 *ngIf="!config.isMobile" color="medium">or</h4>
         <br />
         <ion-button fill="outline" color="primary" type="file">
@@ -156,7 +168,7 @@
         </ion-button>
       </div>
       <!-- file uploaded -->
-      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && !upload.contentImage">
+      <div class="dropAreaFilled expand-to-fill" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && !upload.contentImage">
         <h4 style="text-align: center">{{ upload.file.name }}</h4>
         <h6>{{ upload.readableFileSize }}</h6>
         <br />
@@ -167,31 +179,30 @@
           >Remove</ion-button
         >
       </div>
-      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
-        <div class="fileArea flex-center" style="height: 95%">
+      <div class="dropAreaFilled expand-to-fill" style="padding: 0px" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
+        <div class="fileArea flex-center" style="height: 90%">
           <img [src]="upload.contentImage" style="
-            border: 0; max-height: 90%; min-height: 50%; max-width: 98%; min-width: 50%;">
+            border: 0; max-height: 100%; min-height: 50%; max-width: 98%; min-width: 50%;">
         </div>
         <ion-button fill="outline" color="danger" size="small" (click)="reset('file')">
           Remove ({{upload.readableFileSize}})
         </ion-button>
       </div>
-      <div class="dropAreaFilled" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
+      <div class="dropAreaFilled expand-to-fill" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
         <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
         <p style="text-align: center">File uploads not supported in this demo</p>
       </div>
     </div>
   </div>
-
 </ion-content>
 <ion-footer *ngIf="{ state: $state$ | async } as vars" class="bottom-bar">
   <div class="btnRight">
     <ion-button class="invisible" disabled="true" fill="outline" color="primary">New</ion-button>
     <ion-button *ngIf="vars.state === WriteViewState.WRITING"
-      [disabled]="(!upload.message && !upload.file) || (shields$ | async) || (!encrypt.value && config.isDemo)"
+      [disabled]="(!upload.message && !upload.file) || (shields$ | async)"
       (click)="save()"
       fill="outline"
-      color="primary" 
+      color="primary"
     >
       Save
     </ion-button>

@@ -15,17 +15,10 @@ export class AppComponent {
     public readonly config: ConfigService,
   ) {
     this.initializeApp()
-    this.redirectHttpTraffic()
   }
 
   async initializeApp () {
     this.authStore.restoreCache()
     await this.apiService.initialize()
-  }
-
-  redirectHttpTraffic () {
-    if (this.config.isDemo && window.location.protocol === 'http:' && !window.location.hostname.endsWith('.onion')) {
-      window.location.protocol = 'https:'
-    }
   }
 }

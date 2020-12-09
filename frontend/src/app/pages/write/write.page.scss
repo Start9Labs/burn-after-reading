@@ -51,10 +51,11 @@
 }
 
 .innerGrid {
-  display: grid;
-  grid-template-rows: 44px 50px auto;
-  gap: 8px;
-  height: 100%;
+  display: flex; flex-flow: column; height: 100%
+}
+
+.expand-to-fill {
+  flex: 1 1 auto;
 }
 
 ion-segment.ios {
