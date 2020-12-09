@@ -5,11 +5,14 @@ import { fromAsync$, fromAsyncP, emitAfter$, fromSync$ } from '../util/rxjs.util
 import { LoadingController } from '@ionic/angular'
 import { LoadingOptions } from '@ionic/core'
 
+// waitFor allows us to specify how long (ms) to wait before showing the spinner to prevent
+// flickering if requests go quickly.
+type LoaderServiceOptions = LoadingOptions & { waitFor?: number }
 @Injectable({
   providedIn: 'root',
 })
 export class LoaderService {
-  private loadingOptions: LoadingOptions = defaultOptions()
+  private loaderOptions: LoaderServiceOptions = defaultOptions()
   constructor (private readonly loadingCtrl: LoadingController) { }
 
   private loader: HTMLIonLoadingElement
@@ -22,21 +25,21 @@ export class LoaderService {
     return this.loadingCtrl
   }
 
-  private setOptions (l: LoadingOptions): LoaderService {
-    this.loadingOptions = l
+  private setOptions (l: LoaderServiceOptions): LoaderService {
+    this.loaderOptions = l
     return this
   }
 
-  of (overrideOptions: LoadingOptions): LoaderService {
+  of (overrideOptions: LoaderServiceOptions): LoaderService {
     return new LoaderService(this.loadingCtrl).setOptions(Object.assign(defaultOptions(), overrideOptions))
   }
 
   displayDuring$<T> (o: Observable<T>): Observable<T> {
     let shouldDisplay = true
-    const displayIfItsBeenAtLeast = 10 // ms
+    const displayIfItsBeenAtLeast = this.loaderOptions.waitFor || 10
     return fromAsync$(
       async () => {
-        this.loader = await this.loadingCtrl.create(this.loadingOptions)
+        this.loader = await this.loadingCtrl.create(this.loaderOptions)
         emitAfter$(displayIfItsBeenAtLeast).subscribe(() => { if (shouldDisplay) this.loader.present() })
       },
     ).pipe(
@@ -79,8 +82,9 @@ export function markAsLoadingDuringAsync<T> ($trigger$: Subject<boolean>, thunk:
 }
 
 
-const defaultOptions: () => LoadingOptions = () => ({
+const defaultOptions: () => LoaderServiceOptions = () => ({
   spinner: 'lines',
   cssClass: 'loader',
   backdropDismiss: true,
+  waitFor: 10,
 })

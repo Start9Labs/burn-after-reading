@@ -9,7 +9,10 @@ export class ConfigService {
   version = require('../../../package.json').version
   appType: AppType = require('../../../fe-config.json').appType
   isMobile = isPlatform(window, 'ios') || isPlatform(window, 'android')
+  isIos = isPlatform(window, 'ios')
+  isAndroid = isPlatform(window, 'android')
   isConsulate = window['platform'] === 'ios'
+  isDemo = this.appType === 'demo'
 
   constructor () {
     console.log('origin: ', this.origin)
@@ -32,6 +35,3 @@ function removeProtocol (str: string): string {
   return str
 }
 
-function removePort (str: string): string {
-  return str.split(':')[0]
-}

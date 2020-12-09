@@ -6,12 +6,13 @@ import { LoginService } from 'src/app/services/login.service'
 import { LoaderService } from 'src/app/services/loader.service'
 import { AuthState, AuthStore } from 'src/app/services/auth.store'
 import { AlertController, ToastController } from '@ionic/angular'
-import { Mega, readableBytes, replaceAll } from 'src/app/util/misc.util'
+import { Kila, Mega, pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
 import { addPrefix, Paste } from 'src/app/services/paste/paste'
 import { ApiService } from 'src/app/services/api/api.service'
 import { ViewUtils } from '../view-utils'
 import { encryptArrayBuffer } from 'src/app/services/paste/crypto'
-import { isEnter, onEnterKey } from 'src/app/util/web.util'
+import { isEnter } from 'src/app/util/web.util'
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser'
 
 export enum WriteViewState {
   UNAUTH,
@@ -31,33 +32,44 @@ export class WritePage extends ViewUtils implements OnInit {
   WriteViewState = WriteViewState
   AppType = AppType
 
-  keyboardOpen = false
+  iosKeyboardOpen = false
 
   auth: { value: string, masked: boolean }
   encrypt: { value: string, masked: boolean }
-  upload: { segment: 'message' | 'file', message: string, file: File, readableFileSize: string }
+  upload: {
+    segment: 'message' | 'file',
+    message: string,
+    file: File,
+    readableFileSize: string
+    contentImage?: string | SafeUrl
+  }
 
   url: string
 
   constructor (
-    public readonly config: ConfigService,
+    config: ConfigService,
     private readonly loginService: LoginService,
     private readonly loaderService: LoaderService,
     private readonly authStore: AuthStore,
     private readonly apiService: ApiService,
+    sanitizer: DomSanitizer,
     alertController: AlertController,
     toastController: ToastController,
-  ) { super(toastController, alertController) }
+  ) { super(toastController, alertController, config, sanitizer) }
 
   ngOnInit () {
     this.reset()
+    if (this.config.isIos) {
+      this.cleanup(
+        fromEvent(window, 'ionKeyboardDidShow').subscribe(() => {
+          this.iosKeyboardOpen = true
+        }),
+        fromEvent(window, 'ionKeyboardDidHide').subscribe(() => {
+          this.iosKeyboardOpen = false
+        }),
+      )
+    }
     this.cleanup(
-      fromEvent(window, 'ionKeyboardDidShow').subscribe(() => {
-        this.keyboardOpen = true
-      }),
-      fromEvent(window, 'ionKeyboardDidHide').subscribe(() => {
-        this.keyboardOpen = false
-      }),
       this.authStore.listen({
         [AuthState.UNVERIFIED]: () => {
           this.$state$.next(WriteViewState.UNAUTH)
@@ -67,6 +79,10 @@ export class WritePage extends ViewUtils implements OnInit {
         },
       }),
     )
+
+    if (this.config.isDemo) {
+      return pauseFor(500).then(() => this.alertDemo())
+    }
   }
 
   loginOnEnter (event: KeyboardEvent) {
@@ -75,7 +91,7 @@ export class WritePage extends ViewUtils implements OnInit {
     }
   }
 
-  reset () {
+  reset (segment: 'message' | 'file'  = 'message') {
     this.auth = {
       value: '',
       masked: true,
@@ -87,10 +103,11 @@ export class WritePage extends ViewUtils implements OnInit {
     }
 
     this.upload = {
-      segment: 'message', // 'message' | 'file'
+      segment, // 'message' | 'file'
       message: '',
       file: null,
       readableFileSize: '',
+      contentImage: undefined,
     }
   }
 
@@ -147,9 +164,13 @@ export class WritePage extends ViewUtils implements OnInit {
     }
 
     const satisfies = await this.checkFileSizeRestrictions(f)
-    if (satisfies) {
-      this.upload.file = f
-      this.upload.readableFileSize = readableBytes(f.size)
+    if (!satisfies) return
+
+    this.upload.file = f
+    this.upload.readableFileSize = readableBytes(f.size)
+    if (this.upload.file.type.startsWith('image')) {
+      const imageContent = await f.arrayBuffer()
+      this.upload.contentImage = this.getImageUrl(imageContent, f.type)
     }
   }
 
@@ -167,6 +188,7 @@ export class WritePage extends ViewUtils implements OnInit {
     this.loaderService.of({
       spinner: 'lines',
       message: 'This could take a while...',
+      waitFor: 250,
     }).displayDuringAsync(async () => {
       let content: ArrayBuffer
       let contentType: string
@@ -219,6 +241,7 @@ export class WritePage extends ViewUtils implements OnInit {
   private async alertFilesizeCaution (): Promise<boolean> {
     return new Promise(async (resolve) => {
       const confirm = await this.alertController.create({
+        backdropDismiss: false,
         header: 'Caution',
         message: 'It might take a while to encrypt a file of this size, are you sure you wish to continue?',
         buttons: [
@@ -246,6 +269,7 @@ export class WritePage extends ViewUtils implements OnInit {
     return new Promise(async (resolve) => {
       const confirm = await this.alertController.create({
         header: 'Continue?',
+        backdropDismiss: false,
         message: 'Before sharing more content, make sure you have copied the previous content address above. Without this address that content will be inaccessible!',
         buttons: [
           {
@@ -285,6 +309,7 @@ async function fileToArrayBuffer (f: File): Promise<ArrayBuffer> {
 
 export enum FileTShirtSize {
   SMALL = 1,
+  DEMO_LARGE = 10 * Kila,
   MEDIUM = 2.5 * Mega,
   LARGE = 50 * Mega,
 }

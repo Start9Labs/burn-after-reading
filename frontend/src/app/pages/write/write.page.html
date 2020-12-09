@@ -3,6 +3,7 @@
     <ion-img slot="start" class="headerImg" src="assets/icon/burn-after-reading.png"></ion-img>
     <ion-title style="padding: 6px">
       <ion-text>Burn After Reading</ion-text>
+      <div *ngIf="config.isDemo"><img style="max-width: 80px" src="assets/icon/s9-full.png"/></div>
     </ion-title>
     <ion-buttons slot="end">
       <ion-button size="small" color="medium" *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
@@ -27,9 +28,7 @@
         class="ion-text-wrap label"
         style="padding: 10px; max-width: 95%"
       >
-        <ion-text color="medium" style="font-size: small"
-          >Your content is accessible at the following address:</ion-text
-        >
+        <ion-text color="medium" style="font-size: small">Your content is accessible at the following address:</ion-text>
         <div class="url-label">
           <div style="align-self: center">{{ url }}</div>
           <ion-button
@@ -68,6 +67,7 @@
           Login
         </ion-button>
       </ion-label>
+      <ion-text *ngIf="config.isDemo && vars.state === WriteViewState.UNAUTH" color="medium">For this demo, the password is: 'demo'</ion-text >
     </div>
     <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
     <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
@@ -79,7 +79,7 @@
         <ion-input
           [type]="encrypt.masked ? 'password' : 'text'"
           [(ngModel)]="encrypt.value"
-          placeholder="Encrypt (optional)"
+          [placeholder]="config.isDemo ? 'Encrypt' : 'Encrypt (optional)'"
           class="encryptionPw"
         ></ion-input>
         <ion-button slot="end" fill="clear" (click)="encrypt.masked = !encrypt.masked">
@@ -108,13 +108,14 @@
       <!-- message -->
       <div *ngIf="upload.segment === 'message'">
         <textarea
+          [maxlength]="config.isDemo ? 10000 : 'none'"
           class="messageArea"
           [(ngModel)]="upload.message"
           placeholder="Message"
           style="height: 100%; width: 100%"
         >
         </textarea>
-        <ion-button *ngIf="keyboardOpen" expand="block" color="medium" style="
+        <ion-button *ngIf="iosKeyboardOpen" expand="block" color="medium" style="
           position: relative;
           height: 12px;
           top: -13px;
@@ -155,37 +156,48 @@
         </ion-button>
       </div>
       <!-- file uploaded -->
-      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment ==='file' && upload.file">
+      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && !upload.contentImage">
         <h4 style="text-align: center">{{ upload.file.name }}</h4>
         <h6>{{ upload.readableFileSize }}</h6>
         <br />
         <ion-button
           fill="outline"
           color="danger"
-          (click)="upload.file = null"
+          (click)="reset('file')"
           >Remove</ion-button
         >
       </div>
+      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
+        <div class="fileArea flex-center" style="height: 95%">
+          <img [src]="upload.contentImage" style="
+            border: 0; max-height: 90%; min-height: 50%; max-width: 98%; min-width: 50%;">
+        </div>
+        <ion-button fill="outline" color="danger" size="small" (click)="reset('file')">
+          Remove ({{upload.readableFileSize}})
+        </ion-button>
+      </div>
       <div class="dropAreaFilled" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
         <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
-        <h4 style="text-align: center">File uploads not supported in this demo version</h4>
+        <p style="text-align: center">File uploads not supported in this demo</p>
       </div>
     </div>
   </div>
 
 </ion-content>
 <ion-footer *ngIf="{ state: $state$ | async } as vars" class="bottom-bar">
-
   <div class="btnRight">
     <ion-button class="invisible" disabled="true" fill="outline" color="primary">New</ion-button>
     <ion-button *ngIf="vars.state === WriteViewState.WRITING"
-      [disabled]="(!upload.message && !upload.file) || (shields$ | async)"
+      [disabled]="(!upload.message && !upload.file) || (shields$ | async) || (!encrypt.value && config.isDemo)"
       (click)="save()"
       fill="outline"
-      color="primary"
+      color="primary" 
     >
       Save
     </ion-button>
     <ion-button *ngIf="vars.state === WriteViewState.FINISHED" (click)=newPaste() fill="outline" color="primary">New</ion-button>
+  </div>
+  <div *ngIf="config.isDemo" style="padding: 10px; padding-top: 0px; margin-top: -5px;">
+    <ion-text color="dark" style="font-size: xx-small;">We have never received a government request to hand over user information</ion-text>
   </div>
 </ion-footer>

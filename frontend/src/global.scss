@@ -159,3 +159,13 @@
   display: flex;
   align-items: center;
 }
+
+.alert-demo {
+  --backdrop-opacity: 0.5;
+  --max-height: 85%;
+  --max-width: 75%;
+}
+
+.alert-demo .alert-wrapper .alert-message {
+  max-height: 70vh !important;
+}

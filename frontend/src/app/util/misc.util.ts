@@ -7,7 +7,6 @@ export function replaceAll (theString: string, what: string, withWhat: string): 
 }
 
 export const chill = () => { }
-
 export const chillAsync = async () => { }
 
 export const Kila = 1 << 10

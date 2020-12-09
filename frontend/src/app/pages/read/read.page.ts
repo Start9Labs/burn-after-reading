@@ -1,16 +1,16 @@
-import { Component, OnInit, Sanitizer } from '@angular/core'
+import { Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import { AlertController, ModalController, ToastController } from '@ionic/angular'
+import { AlertController, ToastController } from '@ionic/angular'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { ApiService } from 'src/app/services/api/api.service'
-import { LoaderService, markAsLoadingDuringP } from 'src/app/services/loader.service'
+import { LoaderService } from 'src/app/services/loader.service'
 import { Paste } from 'src/app/services/paste/paste'
 import { pauseFor, readableBytes } from 'src/app/util/misc.util'
 import { ViewUtils } from '../view-utils'
 const mime = require('mime')
 import { ConfigService } from 'src/app/services/config.service'
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser'
+import { DomSanitizer } from '@angular/platform-browser'
 import { isEnter } from 'src/app/util/web.util'
 
 export enum ReadViewState {
@@ -43,20 +43,29 @@ export class ReadPage extends ViewUtils implements OnInit {
   constructor (
     private readonly apiService: ApiService,
     private readonly route: ActivatedRoute,
-    private readonly loader: LoaderService,
-    public readonly config: ConfigService,
-    private readonly sanitizer: DomSanitizer,
+    private readonly loaderService: LoaderService,
+    config: ConfigService,
+    sanitizer: DomSanitizer,
     toastController: ToastController,
     alertController: AlertController,
   ) {
-    super(toastController, alertController)
+    super(toastController, alertController, config, sanitizer)
   }
+
   ngOnInit () {
     this.readId = this.route.snapshot.paramMap.get('id') as string
+    this.preProcesses()
+  }
 
-    this.loader.of({
+  async preProcesses () {
+    if (this.config.isDemo) {
+      await pauseFor(500).then(() => this.alertDemo())
+    }
+
+    return this.loaderService.of({
       spinner: 'lines',
       message: 'This could take a while...',
+      waitFor: 250,
     }).displayDuringP(this.fetchPaste())
   }
 
@@ -77,7 +86,7 @@ export class ReadPage extends ViewUtils implements OnInit {
   }
 
   async viewContent () {
-    this.loader.displayDuringP(
+    this.loaderService.displayDuringP(
       this.rawContent.decrypted(),
     ).then(content => {
       this.setContent(content, this.rawContent.contentType)
@@ -95,7 +104,7 @@ export class ReadPage extends ViewUtils implements OnInit {
   }
 
   async decryptContent () {
-    this.loader.displayDuringAsync(
+    this.loaderService.displayDuringAsync(
       async () => {
         try {
           const valid = await this.rawContent.checkPassword(this.decrypt.value)
@@ -142,7 +151,7 @@ export class ReadPage extends ViewUtils implements OnInit {
     if (this.burning) return
     this.burning = true
     // if for whatever reason the data hasn't be deleted yet...
-    return this.loader.displayDuringP(
+    return this.loaderService.displayDuringP(
       this.deletePaste(),
     ).then(t => t && this.burnTransition())
     .catch(e => this.alertError(e))
@@ -208,18 +217,6 @@ export class ReadPage extends ViewUtils implements OnInit {
       contentImage,
     }
   }
-
-  private getImageUrl (a: ArrayBuffer, contentType: string): string | SafeUrl {
-    if (this.config.isConsulate) {
-      return this.sanitizer.bypassSecurityTrustUrl(arrayBufferDataURL(a, contentType))
-    } else {
-      return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(
-        new Blob(
-          [a], { type: contentType },
-        ),
-      ))
-    }
-  }
 }
 
 type PresentablePaste = {
@@ -242,16 +239,3 @@ function blobToBase64 (blob: Blob): Promise<string> {
   })
 }
 
-function arrayBufferDataURL (a: ArrayBuffer, contentType: string): string {
-  return `data:${contentType};base64,${arrayBufferToBase64(a)}`
-}
-
-function arrayBufferToBase64 ( buffer: ArrayBuffer ): string {
-  let binary = ''
-  const bytes = new Uint8Array(buffer)
-  const len = bytes.byteLength
-  for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[ i ])
-  }
-  return window.btoa( binary )
-}
