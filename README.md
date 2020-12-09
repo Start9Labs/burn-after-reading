@@ -1,5 +1,7 @@
 # Burn After Reading
 
+An encrypted file and message sharing tool built for the [Start9 Embassy](https://start9labs.com/). BAR destroys content after viewing via a one-time Tor link. All data is stored on your Embassy, arguably making it the easiest, most private, and most secure method of conveying sensitive information online without trusting a third party. 
+
 ## Dependencies
 
 - [docker](https://docs.docker.com/get-docker)
