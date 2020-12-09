@@ -64,9 +64,9 @@ export class ViewUtils {
         cssClass: 'alert-demo',
         header: 'Warning',
         backdropDismiss: false,
-        message: `<h6>This instance of Burn After Reading is intended for <i>demo purposes</i>.</h6>
-                  <p>This is a cloud hosted instance of BAR. Like all cloud hosted software, you are completely trusting us, the server operators, with your data. <i>Please do not use this demo for anything you consider private.</i></p>
-                  <p>BAR can be run privately, self-hosted by you, with a click of a button on a Start9 Embassy.</p>`,
+        message: `<h6>This is a hosted instance of Burn After Reading, intended for <i>demo purposes</i>.</h6>
+                  <p>We do not recommend using it, or any hosted software for that matter.</p>
+                  <p>You can run your own, private instance over Tor with the click of a button using the Start9 Emabssy.</p>`,
         buttons: [
           {
             text: 'Run my Own',
@@ -79,7 +79,7 @@ export class ViewUtils {
             },
           },
           {
-            text: 'Continue',
+            text: 'Use Demo',
             role: 'cancel',
             handler: () => resolve(),
           },

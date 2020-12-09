@@ -6,9 +6,12 @@
       <div *ngIf="config.isDemo"><img style="max-width: 80px" src="assets/icon/s9-full.png"/></div>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button size="small" color="medium" *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
-        Logout
+      <ion-button *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
+        <ion-icon slot="icon-only" name="log-out-outline" color="danger"></ion-icon>
       </ion-button>
+      <!-- <ion-button size="small" color="medium" *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
+        Logout
+      </ion-button> -->
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -76,6 +79,7 @@
     <!-- beneath the shields -->
     <div class="innerGrid">
       <ion-item lines="none" style="--background: #040404">
+        <ion-icon style="margin-right: 8px;" slot="start" (click)="presentAlertEncrypt()" size="small" name="help-circle-outline" color="primary"></ion-icon>
         <ion-input
           [type]="encrypt.masked ? 'password' : 'text'"
           [(ngModel)]="encrypt.value"
@@ -111,7 +115,7 @@
           [maxlength]="config.isDemo ? 10000 : 'none'"
           class="messageArea"
           [(ngModel)]="upload.message"
-          placeholder="Message"
+          placeholder="Type Message"
           style="height: 100%; width: 100%"
         >
         </textarea>
@@ -142,7 +146,7 @@
           color="medium"
           style="font-size: 42px"
         ></ion-icon>
-        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File Here'}}</h4>
+        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File'}}</h4>
         <h4 *ngIf="!config.isMobile" color="medium">or</h4>
         <br />
         <ion-button fill="outline" color="primary" type="file">
