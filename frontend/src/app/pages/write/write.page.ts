@@ -201,7 +201,7 @@ export class WritePage extends ViewUtils implements OnInit {
     this.upload.file = f
     this.upload.readableFileSize = readableBytes(f.size)
     if (this.upload.file.type.startsWith('image')) {
-      const imageContent = await f.arrayBuffer()
+      const imageContent = await fileToArrayBuffer(f)
       this.upload.contentImage = this.getImageUrl(imageContent, f.type)
     }
   }
@@ -251,7 +251,6 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   dismissKeyboard () {
-    console.log('dismissing')
     const d = document.getElementById('blur-me')
     return d && d.blur()
   }

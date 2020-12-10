@@ -1,4 +1,3 @@
-import { modulateTime } from 'src/app/util/misc.util'
 import { Paste } from '../paste/paste'
 import { ApiService } from './api.service'
 import { AuthState, AuthStore } from '../auth.store'

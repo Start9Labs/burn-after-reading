@@ -26,6 +26,7 @@
   border-width: 2px;
   border-color: var(--ion-color-medium);
   color: var(--ion-color-medium);
+  border-radius: 5px
 }
 
 .dropAreaMobile {
@@ -48,6 +49,7 @@
   justify-content: center;
   align-items: center;
   color: var(--ion-color-medium);
+  border-radius: 5px
 }
 
 .innerGrid {
@@ -56,6 +58,10 @@
 
 .expand-to-fill {
   flex: 1 1 auto;
+}
+
+.consulate-expand-to-fill{
+  height: 68%
 }
 
 ion-segment.ios {

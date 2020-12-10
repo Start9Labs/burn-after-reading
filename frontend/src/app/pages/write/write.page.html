@@ -75,7 +75,7 @@
 
     <!-- beneath the shields -->
     <div class="innerGrid">
-      <ion-list style="padding: 0px; flex: 0 1 auto;">
+      <ion-list style="padding: 0px; flex: 0 1 auto; border-radius: 5px">
         <ion-item style="--background: #040404; font-size:small">
           <ion-icon style="margin-right: 10px; margin-left: -5px;" slot="start" (click)="presentAlertEncrypt()" size="small" name="help-circle-outline" color="primary"></ion-icon>
           <ion-input
@@ -118,13 +118,13 @@
       </div>
 
       <!-- message -->
-      <div class="expand-to-fill" *ngIf="upload.segment === 'message'">
+      <div class="expand-to-fill" [class.consulate-expand-to-fill]="config.isConsulate" *ngIf="upload.segment === 'message'">
         <textarea
           [maxlength]="config.isDemo ? 10000 : 'none'"
           class="messageArea"
           [(ngModel)]="upload.message"
           placeholder="Type Message"
-          style="height: 100%; width: 100%"
+          style="height: 100%; width: 100%; border-radius: 5px"
         >
         </textarea>
         <ion-button *ngIf="iosKeyboardOpen" expand="block" color="medium" class="keyboard-dismiss" (click)="dismissKeyboard()">Dismiss Keyboard
