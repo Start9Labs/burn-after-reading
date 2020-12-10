@@ -6,7 +6,7 @@ edition = "2018"
 description = "A simple, fast, standalone, self-destructing pastebin service for sharing private information with other human beings. Simply type your message, choose your expiration and self-destruction rules, and share the ephemeral link. Your message never leaves the confines of your physical Embassy device."
 
 [features]
-demo = []
+demo = ["slog-bunyan"]
 
 [dependencies]
 anyhow = "1.0.34"
@@ -25,6 +25,10 @@ serde_json = "1.0.59"
 serde_yaml = "0.8.14"
 sha2 = "0.9.2"
 sled = "0.34.6"
+slog = "2.7.0"
+slog-async = "2.5.0"
+slog-bunyan = { version = "2.2.0", optional = true }
+slog-term = "2.6.0"
 time = "0.2.23"
 tokio = { version = "0.2.22", features = ["full", "time"] }
 warp = "0.2.5"

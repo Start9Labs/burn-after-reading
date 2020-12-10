@@ -3,6 +3,7 @@ use std::future::Future;
 use std::marker::Unpin;
 use std::path::Path;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -19,6 +20,7 @@ use hyper::{
 };
 use lazy_static::lazy_static;
 use sha2::{Digest, Sha256};
+use slog::Drain;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use warp::Filter;
 use web_static_pack::{
@@ -164,17 +166,46 @@ fn internal_server_error<E: std::fmt::Display>(e: E) -> Response<Body> {
 }
 
 async fn failable<F: FnOnce() -> Fut, Fut: Future<Output = Result<Response<Body>, Error>>>(
+    logger: Arc<slog::Logger>,
+    context: &'static str,
     f: F,
 ) -> Result<Response<Body>, warp::Rejection> {
     Ok(match f().await {
         Ok(a) => a,
-        Err(Error::Status(s)) => base_res().status(s).body(Bytes::new().into()).unwrap(),
-        Err(Error::StatusWithMessage(s, e)) => base_res()
-            .status(s)
-            .header(header::CONTENT_TYPE, "text/plain")
-            .body(format!("{}", e).into())
-            .unwrap(),
-        Err(Error::Unexpected(e)) => internal_server_error(e),
+        Err(Error::Status(s)) => {
+            slog::error!(
+                logger,
+                "ERROR";
+                "context" => context,
+                "status" => s.as_u16(),
+                "reason" => s.canonical_reason(),
+            );
+            base_res().status(s).body(Bytes::new().into()).unwrap()
+        }
+        Err(Error::StatusWithMessage(s, e)) => {
+            slog::error!(
+                logger,
+                "ERROR";
+                "context" => context,
+                "status" => s.as_u16(),
+                "reason" => %e,
+            );
+            base_res()
+                .status(s)
+                .header(header::CONTENT_TYPE, "text/plain")
+                .body(format!("{}", e).into())
+                .unwrap()
+        }
+        Err(Error::Unexpected(e)) => {
+            slog::error!(
+                logger,
+                "ERROR";
+                "context" => context,
+                "status" => 500,
+                "reason" => %e,
+            );
+            internal_server_error(e)
+        }
     })
 }
 
@@ -252,6 +283,7 @@ async fn logout(sesh_tree: sled::Tree, session: String) -> Result<Response<Body>
 }
 
 async fn data(
+    logger: Arc<slog::Logger>,
     data_tree: sled::Tree,
     content_type_tree: sled::Tree,
     expiration_tree: sled::Tree,
@@ -306,12 +338,28 @@ async fn data(
                             Poll::Pending => Poll::Pending,
                         }
                     }));
+                    slog::info!(
+                        logger,
+                        "GET";
+                        "status" => 200,
+                        "key" => key,
+                        "content-type" => std::str::from_utf8(content_type.as_ref())?,
+                        "content-length" => len,
+                    );
                     Ok(ok()
                         .header(header::CONTENT_TYPE, content_type.to_vec())
                         .header(header::CONTENT_LENGTH, len)
                         .body(stream.into())
                         .unwrap())
                 } else {
+                    slog::info!(
+                        logger,
+                        "GET";
+                        "status" => 200,
+                        "key" => key,
+                        "content-type" => std::str::from_utf8(content_type.as_ref())?,
+                        "content-length" => data.len(),
+                    );
                     Ok(ok()
                         .header(header::CONTENT_TYPE, content_type.to_vec())
                         .header(header::CONTENT_LENGTH, data.len())
@@ -319,7 +367,15 @@ async fn data(
                         .unwrap())
                 }
             }
-            _ => Err(Error::Status(StatusCode::NOT_FOUND)),
+            _ => {
+                slog::info!(
+                    logger,
+                    "GET";
+                    "status" => 404,
+                    "key" => key,
+                );
+                Err(Error::Status(StatusCode::NOT_FOUND))
+            }
         },
         Method::DELETE => {
             content_type_tree.remove(&key)?;
@@ -334,8 +390,14 @@ async fn data(
                 data_tree.flush_async().map_err(Error::from),
                 content_type_tree.flush_async().map_err(Error::from),
                 expiration_tree.flush_async().map_err(Error::from),
-                rm.map_err(Error::from)
+                rm.map_err(Error::from),
             )?;
+            slog::info!(
+                logger,
+                "DELETE";
+                "status" => 200,
+                "key" => key,
+            );
             Ok(no_content())
         }
         _ => Err(Error::Status(StatusCode::METHOD_NOT_ALLOWED)),
@@ -343,6 +405,7 @@ async fn data(
 }
 
 async fn new_data_small(
+    logger: Arc<slog::Logger>,
     data_tree: sled::Tree,
     content_type_tree: sled::Tree,
     expiration_tree: sled::Tree,
@@ -365,6 +428,15 @@ async fn new_data_small(
     data_tree.insert(&key, &*data)?;
     content_type_tree.insert(&key, content_type.as_bytes())?;
     expiration_tree.insert(&key, &u64::to_be_bytes(expiration))?;
+    slog::info!(
+        logger,
+        "CREATE";
+        "status" => 200,
+        "key" => &key,
+        "content-type" => content_type,
+        "content-length" => data.len(),
+        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64),
+    );
     Ok(key)
 }
 
@@ -426,6 +498,7 @@ where
 }
 
 async fn new_data<S: Stream<Item = Result<B, warp::Error>> + Unpin, B: Buf>(
+    logger: Arc<slog::Logger>,
     data_tree: sled::Tree,
     content_type_tree: sled::Tree,
     expiration_tree: sled::Tree,
@@ -457,9 +530,19 @@ async fn new_data<S: Stream<Item = Result<B, warp::Error>> + Unpin, B: Buf>(
     let big = Path::new("big");
     tokio::fs::create_dir_all(big).await?;
     tokio::fs::rename(tmp.join(&tmp_file), big.join(&key)).await?;
+    let len = tokio::fs::metadata(big.join(&key)).await?.len();
     data_tree.insert(&key, b"")?;
     content_type_tree.insert(&key, content_type.as_bytes())?;
     expiration_tree.insert(&key, &u64::to_be_bytes(expiration))?;
+    slog::info!(
+        logger,
+        "CREATE";
+        "status" => 200,
+        "key" => &key,
+        "content-type" => content_type,
+        "content-length" => len,
+        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64),
+    );
     Ok(key)
 }
 
@@ -526,6 +609,32 @@ async fn main() -> Result<(), AnyError> {
         }
     }
 
+    let decorator = slog_term::TermDecorator::new().stderr().build();
+    let drain = slog_term::FullFormat::new(decorator).build().fuse();
+    #[cfg(feature = "demo")]
+    let drain = slog::Duplicate::new(
+        drain,
+        slog_bunyan::new(
+            tokio::fs::OpenOptions::new()
+                .append(true)
+                .open("bunyan.log")
+                .await?,
+        )
+        .build(),
+    );
+    let drain = slog_async::Async::new(drain)
+        .build()
+        .filter_level(slog::Level::Info)
+        .fuse();
+    let logger = Arc::new(slog::Logger::root(drain, slog::o!()));
+    let sesh_cleaner_logger = logger.clone();
+    let expiration_cleaner_logger = logger.clone();
+    let data_logger = logger.clone();
+    let new_data_logger = logger.clone();
+    let new_data_small_logger = logger.clone();
+    let login_logger = logger.clone();
+    let logout_logger = logger.clone();
+
     let db = if tokio::fs::metadata("burn-after-reading.db").await.is_err() {
         let db = sled::open("burn-after-reading.db")?;
         let pwds = db.open_tree("passwords")?;
@@ -544,6 +653,7 @@ async fn main() -> Result<(), AnyError> {
     let sesh_tree_cleaner = sesh_tree.clone();
     tokio::spawn(async move {
         loop {
+            let mut deleted: usize = 0;
             for (session, expiration) in sesh_tree_cleaner.iter().filter_map(Result::ok) {
                 let mut exp = [0; 8];
                 exp.clone_from_slice(&expiration);
@@ -554,10 +664,17 @@ async fn main() -> Result<(), AnyError> {
                     > u64::from_be_bytes(exp)
                 {
                     if let Err(e) = sesh_tree_cleaner.remove(session) {
-                        eprintln!("Error cleaning out expired session: {}", e);
+                        slog::error!(
+                            sesh_cleaner_logger,
+                            "ERROR";
+                            "context" => "session cleaner",
+                            "reason" => %e,
+                        )
                     };
+                    deleted += 1;
                 }
             }
+            slog::info!(sesh_cleaner_logger, "session cleaner complete"; "deleted" => deleted);
             tokio::time::delay_for(HOUR).await;
         }
     });
@@ -575,6 +692,7 @@ async fn main() -> Result<(), AnyError> {
     let expiration_tree_cleaner = expiration_tree.clone();
     tokio::spawn(async move {
         loop {
+            let mut deleted: usize = 0;
             for (key, expiration) in expiration_tree_cleaner.iter().filter_map(Result::ok) {
                 let mut exp = [0; 8];
                 exp.clone_from_slice(&expiration);
@@ -585,6 +703,7 @@ async fn main() -> Result<(), AnyError> {
                     > u64::from_be_bytes(exp)
                 {
                     if let Err(e) = data(
+                        expiration_cleaner_logger.clone(),
                         data_tree_cleaner.clone(),
                         content_type_tree_cleaner.clone(),
                         expiration_tree_cleaner.clone(),
@@ -593,10 +712,17 @@ async fn main() -> Result<(), AnyError> {
                     )
                     .await
                     {
-                        eprintln!("Error cleaning out expired paste: {}", e)
+                        slog::error!(
+                            expiration_cleaner_logger,
+                            "ERROR";
+                            "context" => "expiration cleaner",
+                            "reason" => %e,
+                        )
                     }
+                    deleted += 1;
                 }
             }
+            slog::info!(expiration_cleaner_logger, "expiration cleaner complete"; "deleted" => deleted);
             tokio::time::delay_for(HOUR).await;
         }
     });
@@ -608,7 +734,17 @@ async fn main() -> Result<(), AnyError> {
                 let data_tree = data_tree.clone();
                 let content_type_tree = content_type_tree.clone();
                 let expiration_tree = expiration_tree.clone();
-                failable(move || data(data_tree, content_type_tree, expiration_tree, key, method))
+                let data_logger_clone = data_logger.clone();
+                failable(data_logger.clone(), "data", move || {
+                    data(
+                        data_logger_clone.clone(),
+                        data_tree,
+                        content_type_tree,
+                        expiration_tree,
+                        key,
+                        method,
+                    )
+                })
             }))
         .or(warp::path!("api" / "data")
             .and(warp::path::end())
@@ -624,9 +760,11 @@ async fn main() -> Result<(), AnyError> {
                     let new_data_small_tree = new_data_small_tree.clone();
                     let new_content_type_small_tree = new_content_type_small_tree.clone();
                     let new_expiration_small_tree = new_expiration_small_tree.clone();
-                    failable(move || {
+                    let new_data_small_logger_clone = new_data_small_logger.clone();
+                    failable(new_data_small_logger.clone(), "new data small", move || {
                         authenticate(sesh_tree_data_small, session, move |_| {
                             new_data_small(
+                                new_data_small_logger_clone.clone(),
                                 new_data_small_tree,
                                 new_content_type_small_tree,
                                 new_expiration_small_tree,
@@ -659,9 +797,11 @@ async fn main() -> Result<(), AnyError> {
                 let new_data_tree = new_data_tree.clone();
                 let new_content_type_tree = new_content_type_tree.clone();
                 let new_expiration_tree = new_expiration_tree.clone();
-                failable(move || {
+                let new_data_logger_clone = new_data_logger.clone();
+                failable(new_data_logger.clone(), "new data", move || {
                     authenticate(sesh_tree_data, session, move |_| {
                         new_data(
+                            new_data_logger_clone.clone(),
                             new_data_tree,
                             new_content_type_tree,
                             new_expiration_tree,
@@ -700,7 +840,9 @@ async fn main() -> Result<(), AnyError> {
             .and_then(move |login_info| {
                 let pwds_tree = pwds_tree.clone();
                 let sesh_tree = sesh_tree.clone();
-                failable(move || login(pwds_tree, sesh_tree, login_info))
+                failable(login_logger.clone(), "login", move || {
+                    login(pwds_tree, sesh_tree, login_info)
+                })
             }))
         .or(warp::path!("api" / "login")
             .and(warp::path::end())
@@ -727,7 +869,9 @@ async fn main() -> Result<(), AnyError> {
             .and(warp::cookie("session"))
             .and_then(move |session| {
                 let sesh_tree_login = sesh_tree_login.clone();
-                failable(move || logout(sesh_tree_login, session))
+                failable(logout_logger.clone(), "logout", move || {
+                    logout(sesh_tree_login, session)
+                })
             }))
         .or(warp::path!("api" / "logout")
             .and(warp::path::end())
