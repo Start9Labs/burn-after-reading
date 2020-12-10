@@ -617,6 +617,7 @@ async fn main() -> Result<(), AnyError> {
         slog_bunyan::new(
             tokio::fs::OpenOptions::new()
                 .append(true)
+                .create(true)
                 .open("bunyan.log")
                 .await?
                 .into_std()
