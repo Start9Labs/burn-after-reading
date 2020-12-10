@@ -94,9 +94,9 @@
         </ion-item>
 
         <ion-item style="--background: #040404; font-size: small" lines=none>
-          <ion-label>Burns Automatically In</ion-label>
+          <ion-label>Burns automatically in</ion-label>
           <ion-select [(ngModel)]="selectedExpiration">
-            <ion-select-option *ngFor="let option of expirationOptions | keyvalue" [value]="option.key" [disabled]="option.value.disabled">{{option.value.display}}</ion-select-option>
+            <ion-select-option *ngFor="let option of expirationOptions | keyvalue: asIsOrder" [value]="option.key" [disabled]="option.value.disabled">{{option.value.display}}</ion-select-option>
           </ion-select>
         </ion-item>
       </ion-list>
@@ -127,22 +127,12 @@
           style="height: 100%; width: 100%"
         >
         </textarea>
-        <ion-button *ngIf="iosKeyboardOpen" expand="block" color="medium" style="
-          position: relative;
-          height: 12px;
-          top: -13px;
-          margin: 0px;
-          padding: 0px;
-          --border-radius: 0px;
-          font-size: x-small;
-          border-style: outset;
-          border-width: 0.5px;
-          border-color: black;
-        " (click)="dismissKeyboard()">Dismiss Keyboard
+        <ion-button *ngIf="iosKeyboardOpen" expand="block" color="medium" class="keyboard-dismiss" (click)="dismissKeyboard()">Dismiss Keyboard
         <ion-input id="blur-me" style="opacity: 0; position:absolute; height: 0; width: 0;"></ion-input>
         </ion-button>
       </div>
-      <!-- file -->
+
+      <!-- file upload -->
       <div
         *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && !upload.file"
         class="dropArea expand-to-fill" [class.dropAreaMobile] = 'config.isMobile'
@@ -154,7 +144,7 @@
           color="medium"
           style="font-size: 42px"
         ></ion-icon>
-        <h4 color="medium">{{config.isMobile ? 'Upload File' : 'Upload File'}}</h4>
+        <h4 color="medium">Upload File</h4>
         <h4 *ngIf="!config.isMobile" color="medium">or</h4>
         <br />
         <ion-button fill="outline" color="primary" type="file">
@@ -167,30 +157,25 @@
           />
         </ion-button>
       </div>
-      <!-- file uploaded -->
+      <!-- No files in demo -->
+      <div class="dropAreaFilled expand-to-fill" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
+        <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
+        <p style="text-align: center">File uploads not supported in this demo</p>
+      </div>
+
+      <!-- regular file uploaded -->
       <div class="dropAreaFilled expand-to-fill" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && !upload.contentImage">
         <h4 style="text-align: center">{{ upload.file.name }}</h4>
         <h6>{{ upload.readableFileSize }}</h6>
         <br />
-        <ion-button
-          fill="outline"
-          color="danger"
-          (click)="reset('file')"
-          >Remove</ion-button
-        >
+        <ion-button fill="outline" color="danger" (click)="reset('file')">Remove</ion-button>
       </div>
-      <div class="dropAreaFilled expand-to-fill" style="padding: 0px" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
-        <div class="fileArea flex-center" style="height: 90%">
-          <img [src]="upload.contentImage" style="
-            border: 0; max-height: 100%; min-height: 50%; max-width: 98%; min-width: 50%;">
-        </div>
-        <ion-button fill="outline" color="danger" size="small" (click)="reset('file')">
+      <!-- image file uploaded -->
+      <div class="dropAreaFilled expand-to-fill" style="position: relative; padding: 0px" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
+        <img [src]="upload.contentImage" class="uploaded-image">
+        <ion-button fill="outline" color="danger" size="small" style="position: absolute; bottom: 1.5%;" (click)="reset('file')">
           Remove ({{upload.readableFileSize}})
         </ion-button>
-      </div>
-      <div class="dropAreaFilled expand-to-fill" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
-        <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
-        <p style="text-align: center">File uploads not supported in this demo</p>
       </div>
     </div>
   </div>
@@ -207,8 +192,5 @@
       Save
     </ion-button>
     <ion-button *ngIf="vars.state === WriteViewState.FINISHED" (click)=newPaste() fill="outline" color="primary">New</ion-button>
-  </div>
-  <div *ngIf="config.isDemo" style="padding: 10px; padding-top: 0px; margin-top: -5px;">
-    <ion-text color="dark" style="font-size: xx-small;">We have never received a government request to hand over user information</ion-text>
   </div>
 </ion-footer>

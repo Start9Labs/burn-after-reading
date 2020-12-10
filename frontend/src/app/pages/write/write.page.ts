@@ -62,11 +62,11 @@ export class WritePage extends ViewUtils implements OnInit {
 
   ngOnInit () {
     this.expirationOptions = {
-      week: { display: '1 Week', count: 7, unit: 'days', disabled: this.config.isDemo },
-      someDays: { display: '3 Days', count: 3, unit: 'days', disabled: this.config.isDemo },
-      day: { display: '1 Day', count: 1, unit: 'days' },
-      hours: { display: '6 Hours', count: 6, unit: 'hours' },
       minutes: { display: '10 minutes', count: 10, unit: 'minutes' },
+      hours: { display: '6 Hours', count: 6, unit: 'hours' },
+      day: { display: '1 Day', count: 1, unit: 'days' },
+      someDays: { display: '3 Days', count: 3, unit: 'days', disabled: this.config.isDemo },
+      week: { display: '1 Week', count: 7, unit: 'days', disabled: this.config.isDemo },
     }
     this.selectedExpiration = 'day'
 
@@ -169,7 +169,7 @@ export class WritePage extends ViewUtils implements OnInit {
   async presentAlertEncryptionRequired () {
     const alert = await this.alertController.create({
       header: 'Encryption Required',
-      message: 'You must encrypt your message in this demo',
+      message: 'You must encrypt your message/file in this demo',
       cssClass: 'error-alert'
     })
 
@@ -212,7 +212,7 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   async save () {
-    if(this.config.isDemo && !this.encrypt.value) {
+    if (this.config.isDemo && !this.encrypt.value) {
       return this.presentAlertEncryptionRequired()
     }
 
@@ -256,10 +256,14 @@ export class WritePage extends ViewUtils implements OnInit {
     return d && d.blur()
   }
 
-  getExpireAt(): Date {
+  getExpireAt (): Date {
     const now = new Date()
-    const {count, unit} = this.expirationOptions[this.selectedExpiration]
+    const { count, unit} = this.expirationOptions[this.selectedExpiration]
     return modulateTime(now, count, unit)
+  }
+
+  asIsOrder () {
+    return 0
   }
 
   private async checkEncryptedFileSizeRestrictions (f: File): Promise<boolean> {

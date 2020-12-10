@@ -61,3 +61,26 @@
 ion-segment.ios {
   margin: 10px 0px;
 }
+
+.uploaded-image {
+  border: 0;
+  max-height: 85%;
+  position: absolute;
+  top: 15px;
+  top: 5%;
+  max-width: 95%;
+}
+
+.keyboard-dismiss {
+  position: relative;
+  height: 12px;
+  top: -13px;
+  margin: 0px;
+  padding: 0px;
+  --border-radius: 0px;
+  font-size: x-small;
+  border-style: outset;
+  border-width: 0.5px;
+  border-color: black;
+
+}

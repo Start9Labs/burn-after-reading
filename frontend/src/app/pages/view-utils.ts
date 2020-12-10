@@ -63,15 +63,16 @@ export class ViewUtils {
       const confirm = await this.alertController.create({
         cssClass: 'alert-demo',
         header: 'Warning',
-        backdropDismiss: false,
         message: `<h6>This is a <i>hosted</i> instance of Burn After Reading.</h6>
-                  <p>You can run your own, private instance over Tor with the click of a button using the Start9 Emabssy.</p>`,
+                  <p>Since you are not the server operator, you can never be 100% that you data is private or secure.</p>
+                  <p>You can run your own, private instance with the click of a button using the Start9 Emabssy.</p>`,
         buttons: [
           {
             text: 'Run my Own',
             handler: () => {
               const a = document.createElement('a')
-              a.href = 'https://start9labs.com'
+              const site = this.config.isConsulate ? 'https://start9labs.com' : 'http://privacy34kn4ez3y3nijweec6w4g54i3g54sdv7r5mr6soma3w4begyd.onion/'
+              a.href = site
               a.target = '_blank'
               pauseFor(500).then(() => a.click())
               return resolve()
