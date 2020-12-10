@@ -618,10 +618,13 @@ async fn main() -> Result<(), AnyError> {
             tokio::fs::OpenOptions::new()
                 .append(true)
                 .open("bunyan.log")
-                .await?,
+                .await?
+                .into_std()
+                .await,
         )
         .build(),
-    );
+    )
+    .fuse();
     let drain = slog_async::Async::new(drain)
         .build()
         .filter_level(slog::Level::Info)
