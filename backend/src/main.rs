@@ -244,12 +244,11 @@ struct Login {
 }
 
 async fn login(
-    pwds_tree: sled::Tree,
+    pwd: Arc<String>,
     sesh_tree: sled::Tree,
     login: Login,
 ) -> Result<Response<Body>, Error> {
-    let pwd = pwds_tree.get(&login.user)?;
-    if pwd.as_ref().map(|p| p.as_ref()) == Some(login.password.as_bytes()) {
+    if login.user == "admin" && &*pwd == &login.password {
         let mut session = vec![0; 16];
         rand::RngCore::fill_bytes(&mut rand::thread_rng(), &mut session);
         session.extend_from_slice(login.user.as_bytes());
@@ -639,17 +638,9 @@ async fn main() -> Result<(), AnyError> {
     let login_logger = logger.clone();
     let logout_logger = logger.clone();
 
-    let db = if tokio::fs::metadata("burn-after-reading.db").await.is_err() {
-        let db = sled::open("burn-after-reading.db")?;
-        let pwds = db.open_tree("passwords")?;
-        pwds.insert("admin", cfg.password.as_bytes())?;
-        pwds.flush_async().await?;
-        db
-    } else {
-        sled::open("burn-after-reading.db")?
-    };
+    let db = sled::open("burn-after-reading.db")?;
 
-    let pwds_tree = db.open_tree("passwords")?;
+    let pwd = Arc::new(cfg.password);
     let sesh_tree = db.open_tree("sessions")?;
     let sesh_tree_data = sesh_tree.clone();
     let sesh_tree_data_small = sesh_tree.clone();
@@ -842,10 +833,10 @@ async fn main() -> Result<(), AnyError> {
             .and(warp::post())
             .and(warp::body::json())
             .and_then(move |login_info| {
-                let pwds_tree = pwds_tree.clone();
+                let pwd = pwd.clone();
                 let sesh_tree = sesh_tree.clone();
                 failable(login_logger.clone(), "login", move || {
-                    login(pwds_tree, sesh_tree, login_info)
+                    login(pwd, sesh_tree, login_info)
                 })
             }))
         .or(warp::path!("api" / "login")
