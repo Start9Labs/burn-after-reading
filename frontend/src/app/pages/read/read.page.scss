@@ -4,6 +4,7 @@
   background: var(--interaction-background);
   max-height: 90%;
   overflow: scroll;
+  border-radius: 5px;
 }
 
 .fileArea {
@@ -13,6 +14,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  border-radius: 5px;
 }
 
 .dropArea {

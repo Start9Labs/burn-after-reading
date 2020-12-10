@@ -1,7 +1,7 @@
 {
   "name": "burn-after-reading",
   "version": "0.1.0",
-  "description": "A simple, fast, standalone, self-destructing pastebin service for sharing private information with other human beings. Simply type your message, choose your expiration and self-destruction rules, and share the ephemeral link. Your message never leaves the confines of your physical Embassy device.",
+  "description": "A simple, fast, standalone service for sharing private information which is destroyed after viewed. Simply type your message, choose your self-destruction rules, and share the ephemeral link over Tor. Content is stored directly on the Embassy, and there are no trusted 3rd parties.",
   "private": true,
   "scripts": {
     "ng": "ng",

@@ -20,9 +20,7 @@
 >
   <!-- Framed Content -->
   <div class="framed-content">
-    <div class="shield top-shield" [class.no-top-shield]="!vars.shields"
-      style="flex-direction: column; justify-content: space-evenly"
-    >
+    <div class="shield top-shield" [class.no-top-shield]="!vars.shields" style="flex-direction: column; justify-content: space-evenly">
       <ion-label
         *ngIf="vars.state === WriteViewState.FINISHED"
         class="ion-text-wrap label"
@@ -128,7 +126,7 @@
         >
         </textarea>
         <ion-button *ngIf="iosKeyboardOpen" expand="block" color="medium" class="keyboard-dismiss" (click)="dismissKeyboard()">Dismiss Keyboard
-        <ion-input id="blur-me" style="opacity: 0; position:absolute; height: 0; width: 0;"></ion-input>
+          <ion-input id="blur-me" style="opacity: 0; position:absolute; height: 0; width: 0;"></ion-input>
         </ion-button>
       </div>
 
@@ -173,7 +171,7 @@
       <!-- image file uploaded -->
       <div class="dropAreaFilled expand-to-fill" style="position: relative; padding: 0px" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
         <img [src]="upload.contentImage" class="uploaded-image">
-        <ion-button fill="outline" color="danger" size="small" style="position: absolute; bottom: 1.5%;" (click)="reset('file')">
+        <ion-button fill="clear" color="danger" size="small" style="position: absolute; bottom: 2%; margin: 0px !important" (click)="reset('file')">
           Remove ({{upload.readableFileSize}})
         </ion-button>
       </div>

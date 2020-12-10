@@ -13,6 +13,3 @@ If you choose to change your random, default BAR password, we recommend using an
    * Brave with SOCKS5 proxy enabled (desktop)
 2. Log in using your BAR password, located in the "Properties" section of your Embassy BAR service.
 3. Bookmark the site for future visits, or better yet, save it to your Bitwarden server!
-
-## Tips
-- Content saved with BAR will delete itself from your Embassy whenever it is viewed, or one week after it has been created, whichever comes first.
