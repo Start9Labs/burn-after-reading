@@ -1,6 +1,7 @@
 # Burn After Reading
 
-An encrypted file and message sharing tool built for the [Start9 Embassy](https://start9labs.com/). BAR destroys content after viewing via a one-time Tor link. All data is stored on your Embassy, arguably making it the easiest, most private, and most secure method of conveying sensitive information online without trusting a third party. 
+Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9labs.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Using a Tor-enabled browser, you can try the hosted demo version here: http://burrrrn6i4g4feosxlliwgfn5ocdznkxxkcfu5ftnwyzxk7fdbwfibyd.onion/.
+
 ## Dependencies
 
 - [docker](https://docs.docker.com/get-docker)

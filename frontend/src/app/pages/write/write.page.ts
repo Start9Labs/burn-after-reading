@@ -124,11 +124,8 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   async newPaste () {
-    const go = await this.alertCopyLink()
-    if (go) {
-      this.reset()
-      this.$state$.next(WriteViewState.WRITING)
-    }
+    this.reset()
+    this.$state$.next(WriteViewState.WRITING)
   }
 
   ngOnDestroy () {
@@ -288,33 +285,6 @@ export class WritePage extends ViewUtils implements OnInit {
         backdropDismiss: false,
         header: 'Caution',
         message: 'It might take a while to encrypt a file of this size, are you sure you wish to continue?',
-        buttons: [
-          {
-            text: 'Cancel',
-            role: 'cancel',
-            handler: () => {
-              return resolve(false)
-            },
-          },
-          {
-            text: 'Continue',
-            handler: () => {
-              return resolve(true)
-            },
-          },
-        ],
-      })
-
-      await confirm.present()
-    })
-  }
-
-  private async alertCopyLink (): Promise<boolean> {
-    return new Promise(async (resolve) => {
-      const confirm = await this.alertController.create({
-        header: 'Continue?',
-        backdropDismiss: false,
-        message: 'Before sharing more content, make sure you have copied the previous content address above. Without this address that content will be inaccessible!',
         buttons: [
           {
             text: 'Cancel',

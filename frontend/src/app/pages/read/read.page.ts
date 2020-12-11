@@ -6,7 +6,7 @@ import { map } from 'rxjs/operators'
 import { ApiService } from 'src/app/services/api/api.service'
 import { LoaderService } from 'src/app/services/loader.service'
 import { Paste } from 'src/app/services/paste/paste'
-import { pauseFor, readableBytes } from 'src/app/util/misc.util'
+import { pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
 import { ViewUtils } from '../view-utils'
 const mime = require('mime')
 import { ConfigService } from 'src/app/services/config.service'
@@ -162,7 +162,7 @@ export class ReadPage extends ViewUtils implements OnInit {
     let title: string
     const extension = mime.getExtension(this.presentableContent.contentType)
     if (!this.presentableContent || this.presentableContent.title === '') {
-      title = `BAR-${(new Date()).toISOString()}.${extension}`
+      title = `BAR-${replaceAll((new Date()).toLocaleDateString(), '/', '-')}.${extension}`
     } else {
       title = this.presentableContent.title
     }

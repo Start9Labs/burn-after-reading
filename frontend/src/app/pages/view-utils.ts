@@ -65,7 +65,7 @@ export class ViewUtils {
         header: 'Warning',
         message: `<h6>This is a <i>hosted</i> instance of Burn After Reading.</h6>
                   <p>Since you are not the server operator, you can never be 100% that you data is private or secure.</p>
-                  <p>You can run your own, private instance with the click of a button using the Start9 Emabssy.</p>`,
+                  <p>You can run your own, private instance with the click of a button using the Start9 Embassy.</p>`,
         buttons: [
           {
             text: 'Run my Own',

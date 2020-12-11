@@ -3,7 +3,7 @@ name = "burn-after-reading"
 version = "0.1.0"
 authors = ["Aiden McClelland <me@drbonez.dev>"]
 edition = "2018"
-description = "A simple, fast, standalone service for sharing private information which is destroyed after viewed. Simply type your message, choose your self-destruction rules, and share the ephemeral link over Tor. Content is stored directly on the Embassy, and there are no trusted 3rd parties."
+description = "A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties."
 
 [features]
 demo = ["slog-bunyan"]
