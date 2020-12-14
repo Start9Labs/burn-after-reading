@@ -71,7 +71,7 @@ export class ViewUtils {
             text: 'Run my Own',
             handler: () => {
               const a = document.createElement('a')
-              const site = this.config.isConsulate ? 'https://start9labs.com' : 'http://privacy34kn4ez3y3nijweec6w4g54i3g54sdv7r5mr6soma3w4begyd.onion/'
+              const site = (this.config.isConsulate || !this.config.isTor) ? 'https://start9labs.com' : 'http://privacy34kn4ez3y3nijweec6w4g54i3g54sdv7r5mr6soma3w4begyd.onion/'
               a.href = site
               a.target = '_blank'
               pauseFor(500).then(() => a.click())

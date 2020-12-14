@@ -5,14 +5,16 @@ import { isPlatform } from '@ionic/angular'
   providedIn: 'root',
 })
 export class ConfigService {
-  origin = removeProtocol(window.origin)
+  origin = window.origin
   version = require('../../../package.json').version
   appType: AppType = require('../../../fe-config.json').appType
+
   isMobile = isPlatform(window, 'ios') || isPlatform(window, 'android')
   isIos = isPlatform(window, 'ios')
   isAndroid = isPlatform(window, 'android')
   isConsulate = window['platform'] === 'ios'
   isDemo = this.appType === 'demo'
+  isTor = isOnionTld(window.origin)
 
   constructor () {
     console.log('origin: ', this.origin)
@@ -28,10 +30,16 @@ export enum AppType {
   DEMO = 'demo',
 }
 
-function removeProtocol (str: string): string {
-  if (str.includes('://')) {
-    return str.split('://')[1]
-  }
-  return str
-}
+function isOnionTld (str: string): boolean {
+  let transformed = str.trim()
 
+  const hasProtocol = str.includes('://')
+  if (!hasProtocol) {
+    transformed = 'http://' + transformed
+  }
+
+  const url = new URL(transformed)
+  const dotSplits = url.hostname.split('.')
+  const tld = url.hostname.split('.')[dotSplits.length - 1]
+  return tld === 'onion'
+}
