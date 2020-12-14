@@ -191,6 +191,14 @@ export class ReadPage extends ViewUtils implements OnInit {
     }
   }
 
+  toWritePage() {
+    const a = document.createElement('a')
+    const site = this.config.origin + '/write'
+    a.href = site
+    a.target = '_blank'
+    a.click()
+  }
+
   private toPresentablePaste (a: ArrayBuffer, contentType: string): PresentablePaste {
     const t = new TextDecoder()
     const titleLength = new Uint8Array(a.slice(0, 1))[0]

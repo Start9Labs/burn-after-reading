@@ -54,7 +54,13 @@
     </div>
     <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
     <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
-    <div class="shield bottom-shield" [class.no-bottom-shield]="!vars.shields"></div>
+    <div class="shield bottom-shield" [class.no-bottom-shield]="!vars.shields">
+      <div *ngIf="config.isDemo && vars.state === ReadViewState.BURNED" style="position: absolute; z-index: 1; margin: 10px 15px; overflow: visible; white-space: break-spaces;">
+        <ion-button style="font-size: small" color="primary" fill="outline" (click)="toWritePage()">
+          Share Your Own Content
+        </ion-button>
+      </div>
+    </div>
 
     <!-- no shields -->
     <div style="height: 100%;" *ngIf="presentableContent">
@@ -119,12 +125,21 @@
     <ion-text style="font-size: smaller" color="medium">
       This content will be burned as soon as you leave the page.
       <a style="cursor: pointer;" (click)="burnNow()">
-        <ion-text style="font-style: italic" color="primary">
+        <ion-text style="font-style: italic; margin-right: -2px;" color="secondary">
           Burn Now
         </ion-text>
       </a>
+      <ng-container *ngIf="config.isDemo">
+        or
+        <a style="cursor: pointer;" (click)="toWritePage()">
+          <ion-text style="font-style: italic; margin-left: -2px;" color="primary">
+            Share Your Own Content
+          </ion-text>
+        </a>
+      </ng-container>
     </ion-text>
   </div>
+
   <!-- Keeps the bottom footer the right height -->
   <div class="btnRight invisible">
     <ion-button></ion-button>
