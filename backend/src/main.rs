@@ -903,6 +903,14 @@ async fn main() -> Result<(), AnyError> {
                     Err(e) => e.as_default_response(),
                 }
             }));
-    warp::serve(filter).bind(([0, 0, 0, 0], 80)).await;
+    warp::serve(filter)
+        .bind((
+            [0, 0, 0, 0],
+            std::env::var("PORT")
+                .map_err(Error::from)
+                .and_then(|p| p.parse().map_err(Error::from))
+                .unwrap_or(80_u16),
+        ))
+        .await;
     Ok(())
 }
