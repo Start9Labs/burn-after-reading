@@ -53,7 +53,10 @@
 }
 
 .innerGrid {
-  display: flex; flex-flow: column; height: 100%
+  display: grid;
+  height: 100%;
+  grid-template-rows: 1fr 1fr 12fr;
+  grid-gap: 5px;
 }
 
 .expand-to-fill {
