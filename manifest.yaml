@@ -1,13 +1,13 @@
 compat: v0
 id: burn-after-reading
-version: 0.1.0
-os-version-required: ">=0.2.4"
-os-version-recommended: ">=0.2.7"
+version: 0.1.1
+os-version-required: ">=0.2.9"
+os-version-recommended: ">=0.2.9"
 title: "Burn After Reading"
 description:
   short: Share messages and files that are destroyed after they are viewed
   long: A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.
-release-notes: Initial Release
+release-notes: Version 0.1.1 makes Burn After Reading compatible with the LAN feature released in EmbassyOS 0.2.9
 ports:
   - internal: 80
     tor: 80
