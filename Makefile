@@ -1,4 +1,4 @@
-VERSION := $(shell yq r manifest.yaml version)
+VERSION := $(shell yq e ".version" manifest.yaml)
 BACKEND_SRC := $(shell find ./backend/src/ -name '*.rs') backend/Cargo.toml backend/Cargo.lock
 FRONTEND_SRC := \
 	$(shell find ./frontend/src/) \
@@ -38,4 +38,4 @@ frontend/node_modules: frontend/package.json
 
 frontend/package.json: manifest.yaml
 	cat frontend/package.json | jq '.version = "$(VERSION)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
-	cat frontend/package.json | jq '.description = "$(shell yq r manifest.yaml description.long)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
+	cat frontend/package.json | jq '.description = "$(shell yq e ".description.long" manifest.yaml)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
