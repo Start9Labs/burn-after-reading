@@ -1,6 +1,6 @@
 compat: v0
 id: burn-after-reading
-version: 0.1.1
+version: 0.1.2
 os-version-required: ">=0.2.9"
 os-version-recommended: ">=0.2.9"
 title: "Burn After Reading"
