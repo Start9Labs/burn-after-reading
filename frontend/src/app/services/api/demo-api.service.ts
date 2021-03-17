@@ -1,4 +1,4 @@
-import { Kila } from '../../util/misc.util'
+import { Kilo } from '../../util/misc.util'
 import { AuthStore } from '../auth.store'
 import { Paste } from '../paste/paste'
 import { LiveApi } from './live-api.service'
@@ -8,7 +8,7 @@ export class DemoApi extends LiveApi {
 
     async newPaste (paste: Paste, expireAt: Date): Promise<{ hash: string }> {
         if (paste.contentType !== 'text/plain') throw new Error('This demo only supports text uploads.')
-        if (paste.size >= 10 * Kila) throw new Error('This demo only uploads up to 10 KiB')
+        if (paste.size >= 10 * Kilo) throw new Error('This demo only uploads up to 10 KiB')
         return super.newPaste(paste, expireAt)
     }
 }

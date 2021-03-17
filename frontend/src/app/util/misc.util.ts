@@ -9,7 +9,7 @@ export function replaceAll (theString: string, what: string, withWhat: string): 
 export const chill = () => { }
 export const chillAsync = async () => { }
 
-export const Kila = 1 << 10
+export const Kilo = 1 << 10
 export const Mega = 1 << 20
 export const Giga = 1 << 30
 
@@ -20,8 +20,8 @@ export function readableBytes (b: number): string {
   if (b > Mega) {
     return `${(b / Mega).toFixed(2)} MiB`
   }
-  if (b > Kila) {
-    return `${(b / Kila).toFixed(2)} KiB`
+  if (b > Kilo) {
+    return `${(b / Kilo).toFixed(2)} KiB`
   }
   return `${b} B`
 }
