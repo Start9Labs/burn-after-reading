@@ -307,7 +307,8 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   private setUrl (hash: string) {
-    let base = this.config.origin.replace('.local','.onion')
+    let loc = this.config.origin
+    let base = loc.endsWith('.local') ? loc.replace('.local','.onion').replace('https://', 'http://') : loc
     this.url = base + '/read/' + replaceAll(hash, '=', '%3D')
   }
 }
