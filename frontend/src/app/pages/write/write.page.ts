@@ -6,7 +6,7 @@ import { LoginService } from 'src/app/services/login.service'
 import { LoaderService } from 'src/app/services/loader.service'
 import { AuthState, AuthStore } from 'src/app/services/auth.store'
 import { AlertController, ToastController } from '@ionic/angular'
-import { Kila, Mega, modulateTime, pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
+import { Kilo, Mega, modulateTime, pauseFor, readableBytes, replaceAll } from 'src/app/util/misc.util'
 import { addPrefix, Paste } from 'src/app/services/paste/paste'
 import { ApiService } from 'src/app/services/api/api.service'
 import { ViewUtils } from '../view-utils'
@@ -325,7 +325,7 @@ async function fileToArrayBuffer (f: File): Promise<ArrayBuffer> {
 
 export enum FileTShirtSize {
   SMALL = 1,
-  DEMO_LARGE = 10 * Kila,
+  DEMO_LARGE = 10 * Kilo,
   MEDIUM = 2.5 * Mega,
   LARGE = 50 * Mega,
 }
