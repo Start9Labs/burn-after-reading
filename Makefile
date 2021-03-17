@@ -25,7 +25,7 @@ backend/target/armv7-unknown-linux-musleabihf/release/burn-after-reading: $(BACK
 
 backend/Cargo.toml: manifest.yaml
 	toml set backend/Cargo.toml package.version "$(VERSION)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
-	toml set backend/Cargo.toml package.description "$(shell yq r manifest.yaml description.long)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
+	toml set backend/Cargo.toml package.description "$(shell yq e ".description.long" manifest.yaml)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
 
 backend/src/ui.pack: frontend/dist
 	web-static-pack-packer frontend/dist backend/src/ui.pack
