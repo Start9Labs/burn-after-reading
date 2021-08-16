@@ -1,10 +1,10 @@
-FROM alpine:3.12
+FROM alpine:latest
 
 RUN apk update
-RUN apk add tini
+RUN apk add tini curl
 
 WORKDIR /root
 
-ADD ./backend/target/armv7-unknown-linux-musleabihf/release/burn-after-reading /usr/local/bin/burn-after-reading
+ADD ./backend/target/aarch64-unknown-linux-musl/release/burn-after-reading /usr/local/bin/burn-after-reading
 
 ENTRYPOINT [ "tini", "/usr/local/bin/burn-after-reading" ]
