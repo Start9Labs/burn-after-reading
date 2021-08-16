@@ -1,19 +1,132 @@
-compat: v0
 id: burn-after-reading
-version: 0.1.3
-os-version-required: ">=0.2.9"
-os-version-recommended: ">=0.2.9"
 title: "Burn After Reading"
+version: 0.1.4
+release-notes: "Upgrade to EmbassyOS v0.3.0"
+license: gnu
+wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
+upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
+support-site: "https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com"
+marketing-site: "https://start9.com"
+build: ["make"]
+min-os-version: "0.3.0"
 description:
   short: Share messages and files that are destroyed after they are viewed
-  long: A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.
-release-notes: Fixes a bug where sharing URL's were invalid if the app is accessed over its .local domain.
-ports:
-  - internal: 80
-    tor: 80
-image:
-  type: tar
-mount: /root
-has-instructions: true
-assets: []
-hidden-service-version: v3
+  long: |
+    A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.
+assets:
+  license: LICENSE
+  icon: icon.png
+  instructions: instructions.md
+  docker-images: image.tar
+main:
+  type: docker
+  image: main
+  entrypoint: "burn-after-reading"
+  args: []
+  mounts:
+    main: /root
+  io-format: yaml
+health-checks:
+  interface:
+    name: Web Interface
+    description: Ensures the network interface is accessible via HTTP.
+    type: docker
+    image: main
+    entrypoint: sh
+    args: ["-c", "curl burn-after-reading.embassy:80 || exit 1"]
+    io-format: yaml
+    severity: warning
+    inject: true
+config:
+  get:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args: 
+      - config
+      - get
+      - /root
+      - "/mnt/assets/config_spec.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
+    io-format: yaml
+  set:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - config
+      - set
+      - "burn-after-reading"
+      - /root
+      - "/mnt/assets/config_rules.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
+    io-format: yaml
+properties:
+  type: docker
+  image: compat
+  system: true
+  entrypoint: compat
+  args:
+    - properties
+    - /root
+  mounts:
+    main: /root
+    compat: /mnt/assets
+  io-format: yaml
+dependencies: {}
+volumes:
+  main:
+    type: data
+  compat:
+    type: assets
+alerts: {}
+interfaces:
+  network:
+    name: Network Interface
+    description: Specifies the interfaces to listen on for HTTP connections.
+    tor-config:
+      port-mapping:
+        80: "80"
+    lan-config:
+      80:
+        ssl: true
+        mapping: 443
+    ui: true
+    protocols:
+      - tcp
+      - http
+backup:
+  create:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - create
+      - /mnt/backup
+      - /root/data
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root/data
+    io-format: yaml
+  restore:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - restore
+      - /mnt/backup
+      - /root/data
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root/data
+    io-format: yaml
