@@ -18,41 +18,67 @@ assets:
   icon: icon.png
   instructions: instructions.md
   docker-images: image.tar
-  icon-type: png
 main:
   type: docker
   image: main
   entrypoint: "burn-after-reading"
   args: []
-  mounts: {}
+  mounts:
+    main: /root
   io-format: yaml
 health-checks: {}
 config:
   get:
     type: docker
     image: compat
-    entrypoint: config
+    system: true
+    entrypoint: compat
     args: 
-      - "get"
-      - "/root"
-    mounts: {}
+      - config
+      - get
+      - /root
+      - "/mnt/assets/config_spec.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
     io-format: yaml
   set:
     type: docker
     image: compat
-    entrypoint: config
+    system: true
+    entrypoint: compat
     args:
-      - "set"
-      - "/root"
-    mounts: {}
-    io-format: yaml
+      - config
+      - set
+      - "burn-after-reading"
+      - /root
+      - "/mnt/assets/config_rules.yaml"
+    mounts:
+      compat: /mnt/assets
+      main: /root
+properties:
+  type: docker
+  image: compat
+  system: true
+  entrypoint: compat
+  args:
+    - properties
+    - /root
+  mounts:
+    main: /root
+    compat: /mnt/assets
+  io-format: yaml
 dependencies: {}
-volumes: {}
+volumes:
+  main:
+    type: data
+  compat:
+    type: assets
 alerts: {}
 interfaces:
-  main:
-    name: Main
-    description: Main image interface configurations
+  network:
+    name: Network Interface
+    description: Specifies the interfaces to listen on for HTTP connections.
     tor-config:
       port-mapping:
         80: "80"
@@ -69,13 +95,27 @@ backup:
     type: docker
     image: compat
     system: true
-    entrypoint: "true"
-    args: []
-    mounts: {}
+    entrypoint: compat
+    args:
+      - duplicity
+      - create
+      - "burn-after-reading"
+      - /mnt/backup
+      - /root
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root
   restore:
     type: docker
     image: compat
     system: true
-    entrypoint: "true"
-    args: []
-    mounts: {}
+    entrypoint: compat
+    args:
+      - duplicity
+      - restore
+      - "burn-after-reading"
+      - /mnt/backup
+      - /root
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root
