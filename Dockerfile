@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 RUN apk update
-RUN apk add tini
+RUN apk add tini curl
 
 WORKDIR /root
 

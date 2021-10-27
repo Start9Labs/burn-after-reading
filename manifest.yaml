@@ -26,7 +26,15 @@ main:
   mounts:
     main: /root
   io-format: yaml
-health-checks: {}
+health-checks:
+  interface:
+    type: docker
+    image: main
+    entrypoint: sh
+    args: ["-c", "curl burn-after-reading.embassy:80 || exit 1"]
+    io-format: yaml
+    critical: false
+    inject: true
 config:
   get:
     type: docker
@@ -56,6 +64,7 @@ config:
     mounts:
       compat: /mnt/assets
       main: /root
+    io-format: yaml
 properties:
   type: docker
   image: compat
@@ -84,8 +93,8 @@ interfaces:
         80: "80"
     lan-config:
       80:
-        ssl: false
-        mapping: 80
+        ssl: true
+        mapping: 443
     ui: true
     protocols:
       - tcp
@@ -99,12 +108,12 @@ backup:
     args:
       - duplicity
       - create
-      - "burn-after-reading"
       - /mnt/backup
-      - /root
+      - /root/data
     mounts:
       BACKUP: /mnt/backup
-      main: /root
+      main: /root/data
+    io-format: yaml
   restore:
     type: docker
     image: compat
@@ -113,9 +122,9 @@ backup:
     args:
       - duplicity
       - restore
-      - "burn-after-reading"
       - /mnt/backup
-      - /root
+      - /root/data
     mounts:
       BACKUP: /mnt/backup
-      main: /root
+      main: /root/data
+    io-format: yaml
