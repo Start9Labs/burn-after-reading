@@ -28,12 +28,14 @@ main:
   io-format: yaml
 health-checks:
   interface:
+    name: Web Interface
+    description: Ensures the network interface is accessible via HTTP.
     type: docker
     image: main
     entrypoint: sh
     args: ["-c", "curl burn-after-reading.embassy:80 || exit 1"]
     io-format: yaml
-    critical: false
+    severity: warning
     inject: true
 config:
   get:
