@@ -21,8 +21,8 @@ assets:
 main:
   type: docker
   image: main
-  entrypoint: "burn-after-reading"
-  args: []
+  entrypoint: tini
+  args: ["/usr/local/bin/burn-after-reading"]
   mounts:
     main: /root
   io-format: yaml
