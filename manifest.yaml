@@ -21,21 +21,20 @@ assets:
 main:
   type: docker
   image: main
-  entrypoint: "burn-after-reading"
-  args: []
+  entrypoint: tini
+  args: ["/usr/local/bin/burn-after-reading"]
   mounts:
     main: /root
   io-format: yaml
 health-checks:
   interface:
     name: Web Interface
-    description: Ensures the network interface is accessible via HTTP.
+    description: The main user interface for interacting with Burn After Reading, which can be accessed via web browser.
     type: docker
     image: main
-    entrypoint: sh
-    args: ["-c", "curl burn-after-reading.embassy:80 || exit 1"]
-    io-format: yaml
-    severity: warning
+    entrypoint: check-web.sh
+    args: []
+    io-format: json
     inject: true
 config:
   get:
@@ -87,16 +86,16 @@ volumes:
     type: assets
 alerts: {}
 interfaces:
-  network:
-    name: Network Interface
-    description: Specifies the interfaces to listen on for HTTP connections.
+  main:
+    name: Web Interface
+    description: Main user interface for interacting with Burn After Reading in a web browser.
     tor-config:
       port-mapping:
         80: "80"
     lan-config:
-      80:
+      443:
         ssl: true
-        mapping: 443
+        internal: 80
     ui: true
     protocols:
       - tcp
