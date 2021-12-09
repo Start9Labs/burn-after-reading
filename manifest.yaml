@@ -35,7 +35,6 @@ health-checks:
     entrypoint: sh
     args: ["-c", "curl burn-after-reading.embassy:80 || exit 1"]
     io-format: yaml
-    severity: warning
     inject: true
 config:
   get:
