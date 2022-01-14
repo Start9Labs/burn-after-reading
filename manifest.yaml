@@ -86,9 +86,9 @@ volumes:
     type: assets
 alerts: {}
 interfaces:
-  network:
-    name: Network Interface
-    description: Specifies the interfaces to listen on for HTTP connections.
+  main:
+    name: Web Interface
+    description: Main user interface for interacting with Burn After Reading in a web browser.
     tor-config:
       port-mapping:
         80: "80"
