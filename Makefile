@@ -20,7 +20,7 @@ verify: burn-after-reading.s9pk $(S9PK_PATH)
 burn-after-reading.s9pk: manifest.yaml image.tar LICENSE instructions.md icon.png $(ASSET_PATHS)
 	embassy-sdk pack
 
-image.tar: Dockerfile backend/target/aarch64-unknown-linux-musl/release/burn-after-reading
+image.tar: Dockerfile backend/target/aarch64-unknown-linux-musl/release/burn-after-reading check-web.sh
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/burn-after-reading/main:${EMVER} --platform=linux/arm64/v8 -o type=docker,dest=image.tar .
 
 backend/target/aarch64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
