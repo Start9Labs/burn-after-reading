@@ -15,7 +15,7 @@ S9PK_PATH=$(shell find . -name burn-after-reading.s9pk -print)
 all: verify
 
 verify: burn-after-reading.s9pk $(S9PK_PATH)
-	embassy-sdk verify $(S9PK_PATH)
+	embassy-sdk verify s9pk $(S9PK_PATH)
 
 burn-after-reading.s9pk: manifest.yaml image.tar LICENSE instructions.md icon.png $(ASSET_PATHS)
 	embassy-sdk pack
