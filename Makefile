@@ -25,7 +25,6 @@ image.tar: Dockerfile backend/target/aarch64-unknown-linux-musl/release/burn-aft
 
 backend/target/aarch64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
 	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:aarch64-musl cargo build --release
-	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:aarch64-musl musl-strip target/aarch64-unknown-linux-musl/release/burn-after-reading
 
 backend/Cargo.toml: manifest.yaml
 	toml set backend/Cargo.toml package.version "$(EMVER)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
