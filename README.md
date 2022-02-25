@@ -11,7 +11,7 @@ Burn After Reading is a simple, fast, standalone pastebin service for the [Start
 - [jq](https://stedolan.github.io/jq/)
 - [toml-cli](https://crates.io/crates/toml-cli)
 - [web-static-pack-packer](https://crates.io/crates/web-static-pack-packer)
-- [appmgr](https://github.com/Start9Labs/appmgr)
+- [embassy-sdk](https://github.com/Start9Labs/embassy-os/blob/master/backend/install-sdk.sh)
 - [make](https://www.gnu.org/software/make/)
 
 ## Cloning
@@ -38,5 +38,6 @@ SSH into an Embassy device.
 Run the following command to determine successful install:
 
 ```
-appmgr install burn-after-reading.s9pk
+embassy-cli auth login
+embassy-cli package install burn-after-reading.s9pk
 ```
