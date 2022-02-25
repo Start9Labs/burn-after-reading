@@ -29,7 +29,7 @@ main:
 health-checks:
   interface:
     name: Web Interface
-    description: The main user interface for interacting with Burn After Reading, which can be accessed via web browser.
+    success-message: The user interface for interacting with Burn After Reading can be accessed via web browser.
     type: docker
     image: main
     entrypoint: check-web.sh
