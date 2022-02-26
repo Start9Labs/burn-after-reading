@@ -8,7 +8,6 @@ upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
 support-site: "https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com"
 marketing-site: "https://start9.com"
 build: ["make"]
-min-os-version: "0.3.0"
 description:
   short: Share messages and files that are destroyed after they are viewed
   long: |
