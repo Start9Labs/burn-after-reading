@@ -1,6 +1,10 @@
 # Burn After Reading
 
-Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9labs.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Using a Tor-enabled browser, you can try the hosted demo version here: http://burrrrn6i4g4feosxlliwgfn5ocdznkxxkcfu5ftnwyzxk7fdbwfibyd.onion/.
+Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9labs.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
+
+Using a Tor-enabled browser, you can try the hosted demo here: http://burrrrn6i4g4feosxlliwgfn5ocdznkxxkcfu5ftnwyzxk7fdbwfibyd.onion/.
+
+There is also a clearnet version here: https://burnafterreading.net.
 
 ## Dependencies
 
