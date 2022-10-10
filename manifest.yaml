@@ -1,7 +1,7 @@
 id: burn-after-reading
 title: "Burn After Reading"
-version: 0.1.4
-release-notes: "Upgrade to EmbassyOS v0.3.0"
+version: 0.1.5
+release-notes: "Upgrade to run on x86_64 architecture"
 license: gnu
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
@@ -28,7 +28,7 @@ main:
 health-checks:
   interface:
     name: Web Interface
-    success-message: The user interface for interacting with Burn After Reading can be accessed via web browser.
+    success-message: The user interface is ready to visit in a web browser
     type: docker
     image: main
     entrypoint: check-web.sh
