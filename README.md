@@ -1,12 +1,17 @@
 # Burn After Reading
 
-Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9labs.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
+Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
 
 Using a Tor-enabled browser, you can try the hosted demo here: http://burrrrn6i4g4feosxlliwgfn5ocdznkxxkcfu5ftnwyzxk7fdbwfibyd.onion/.
 
 There is also a clearnet version here: https://burnafterreading.net.
 
+This repository also creates the `s9pk` package that is installed to run `burn-after-reading` on [embassyOS](https://github.com/Start9Labs/embassy-os/).
+
 ## Dependencies
+
+The following set of dependencies are required to build this project. You can find detailed steps to setup your environment in the service packaging [documentation](https://github.com/Start9Labs/service-pipeline#development-environment).
+
 
 - [docker](https://docs.docker.com/get-docker)
 - [docker-buildx](https://docs.docker.com/buildx/working-with-buildx/)
@@ -20,7 +25,7 @@ There is also a clearnet version here: https://burnafterreading.net.
 
 ## Cloning
 
-Clone the project locally. Note the submodule link to the original project(s). 
+Clone the project locally:
 
 ```
 git clone git@github.com:Start9Labs/burn-after-reading.git
@@ -29,19 +34,33 @@ cd burn-after-reading
 
 ## Building
 
-To build the project, run the following commands:
+To build the `burn-after-reading` package, run the following command:
 
 ```
 make
 ```
 
-## Installing (on Embassy)
+## Installing (on embassyOS)
 
-SSH into an Embassy device.
-`scp` the `.s9pk` to any directory from your local machine.
-Run the following command to determine successful install:
+Run the following commands to determine successful install:
+> :information_source: Change embassy-server-name.local to your Embassy address
 
 ```
 embassy-cli auth login
-embassy-cli package install burn-after-reading.s9pk
+# Enter your embassy password
+embassy-cli --host https://embassy-server-name.local package install specter.s9pk
 ```
+
+If you already have your `embassy-cli` config file setup with a default `host`, you can install simply by running:
+
+```
+make install
+```
+
+> **Tip:** You can also install the burn-after-reading.s9pk using **Sideload Service** under the **Embassy > Settings** section.
+
+### Verify Install
+
+Go to your Embassy Services page, select **Burn After Reading**, configure and start the service. Then, verify its interfaces are accessible.
+
+#Done

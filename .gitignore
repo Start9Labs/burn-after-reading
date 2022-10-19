@@ -2,3 +2,5 @@ burn-after-reading.db
 burn-after-reading.s9pk
 image.tar
 frontend/.angular
+.vscode/
+docker-images

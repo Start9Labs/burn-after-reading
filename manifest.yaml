@@ -128,3 +128,12 @@ backup:
       BACKUP: /mnt/backup
       main: /root/data
     io-format: yaml
+migrations:
+  from:
+    "*":
+      type: script
+      args: ["from"]
+  to:
+    "*":
+      type: script
+      args: ["to"]
