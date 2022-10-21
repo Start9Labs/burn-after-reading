@@ -4,3 +4,4 @@ image.tar
 frontend/.angular
 .vscode/
 docker-images
+scripts/*.js

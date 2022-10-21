@@ -1,5 +1,5 @@
 PKG_VERSION := $(shell yq e ".version" manifest.yaml)
-ASSET_PATHS := $(shell find ./assets/*)
+PKG_ID := $(shell yq e ".id" manifest.yaml)
 BACKEND_SRC := $(shell find ./backend/src/ -name '*.rs') backend/Cargo.toml backend/Cargo.lock
 FRONTEND_SRC := \
 	$(shell find ./frontend/src/) \
@@ -8,7 +8,7 @@ FRONTEND_SRC := \
 	frontend/ionic.config.json \
 	frontend/tsconfig.json \
 	frontend/fe-config.json
-PKG_ID := $(shell yq e ".id" manifest.yaml)
+TS_FILES := $(shell find . -name \*.ts )
 
 .DELETE_ON_ERROR:
 
@@ -28,15 +28,15 @@ verify: $(PKG_ID).s9pk
 install: $(PKG_ID).s9pk
 	embassy-cli package install $(PKG_ID).s9pk
 
-$(PKG_ID).s9pk: manifest.yaml LICENSE instructions.md icon.png  docker-images/aarch64.tar docker-images/x86_64.tar $(ASSET_PATHS)
+$(PKG_ID).s9pk: manifest.yaml LICENSE instructions.md icon.png scripts/embassy.js docker-images/aarch64.tar docker-images/x86_64.tar
 	if ! [ -z "$(ARCH)" ]; then cp docker-images/$(ARCH).tar image.tar; fi
 	embassy-sdk pack
 
-docker-images/x86_64.tar: Dockerfile check-web.sh backend/target/x86_64-unknown-linux-musl/release/burn-after-reading check-web.sh
+docker-images/x86_64.tar: Dockerfile backend/target/x86_64-unknown-linux-musl/release/burn-after-reading
 	mkdir -p docker-images
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/burn-after-reading/main:$(PKG_VERSION) --platform=linux/amd64 --build-arg ARCH=x86_64 -o type=docker,dest=docker-images/x86_64.tar .
 
-docker-images/aarch64.tar: Dockerfile check-web.sh backend/target/aarch64-unknown-linux-musl/release/burn-after-reading check-web.sh
+docker-images/aarch64.tar: Dockerfile backend/target/aarch64-unknown-linux-musl/release/burn-after-reading
 	mkdir -p docker-images
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/burn-after-reading/main:$(PKG_VERSION) --platform=linux/arm64 --build-arg ARCH=aarch64 -o type=docker,dest=docker-images/aarch64.tar .
 
@@ -62,3 +62,6 @@ frontend/node_modules: frontend/package.json
 frontend/package.json: manifest.yaml
 	cat frontend/package.json | jq '.version = "$(PKG_VERSION)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
 	cat frontend/package.json | jq '.description = "$(shell yq e ".description.long" manifest.yaml)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
+
+scripts/embassy.js: $(TS_FILES)
+	deno bundle scripts/embassy.ts scripts/embassy.js

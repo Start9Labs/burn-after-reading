@@ -10,8 +10,7 @@ This repository also creates the `s9pk` package that is installed to run `burn-a
 
 ## Dependencies
 
-The following set of dependencies are required to build this project. You can find detailed steps to setup your environment in the service packaging [documentation](https://github.com/Start9Labs/service-pipeline#development-environment).
-
+Install the system dependencies below to build this project by following the instructions in the provided links. You can also find detailed steps to setup your environment in the service packaging [documentation](https://github.com/Start9Labs/service-pipeline#development-environment).
 
 - [docker](https://docs.docker.com/get-docker)
 - [docker-buildx](https://docs.docker.com/buildx/working-with-buildx/)
@@ -48,7 +47,7 @@ Run the following commands to determine successful install:
 ```
 embassy-cli auth login
 # Enter your embassy password
-embassy-cli --host https://embassy-server-name.local package install specter.s9pk
+embassy-cli --host https://embassy-server-name.local package install burn-after-reading.s9pk
 ```
 
 If you already have your `embassy-cli` config file setup with a default `host`, you can install simply by running:

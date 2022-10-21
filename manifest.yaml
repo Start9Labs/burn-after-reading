@@ -1,7 +1,7 @@
 id: burn-after-reading
 title: "Burn After Reading"
 version: 0.1.5
-release-notes: "Upgrade to run on x86_64 architecture"
+release-notes: "Update to run on x86_64 architecture"
 license: gnu
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
@@ -29,60 +29,18 @@ health-checks:
   interface:
     name: Web Interface
     success-message: The user interface is ready to visit in a web browser
-    type: docker
-    image: main
-    entrypoint: check-web.sh
-    args: []
-    io-format: json
-    inject: true
+    type: script
 config:
   get:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args: 
-      - config
-      - get
-      - /root
-      - "/mnt/assets/config_spec.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
   set:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - set
-      - "burn-after-reading"
-      - /root
-      - "/mnt/assets/config_rules.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
 properties:
-  type: docker
-  image: compat
-  system: true
-  entrypoint: compat
-  args:
-    - properties
-    - /root
-  mounts:
-    main: /root
-    compat: /mnt/assets
-  io-format: yaml
+  type: script
 dependencies: {}
 volumes:
   main:
     type: data
-  compat:
-    type: assets
 alerts: {}
 interfaces:
   main:
