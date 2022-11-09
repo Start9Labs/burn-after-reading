@@ -21,7 +21,7 @@ use hyper::{
 use lazy_static::lazy_static;
 use sha2::{Digest, Sha256};
 use slog::Drain;
-use tokio::io::{AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncWrite, AsyncWriteExt, ReadBuf};
 use warp::Filter;
 use web_static_pack::{
     hyper_loader::{Responder, ResponderError},
@@ -257,7 +257,7 @@ async fn login(
         let cookie = Cookie::build("session", base64::encode(&session))
             .expires(time::OffsetDateTime::from_unix_timestamp(
                 exp.as_secs() as i64
-            ))
+            ).ok())
             .path("/api")
             .http_only(true)
             .same_site(cookie::SameSite::Strict)
@@ -315,17 +315,18 @@ async fn data(
                             + 'static
                             + Send,
                     > = Box::new(futures::stream::poll_fn(move |cx| {
-                        let mut buf = [0; 1 << 20];
+                        let mut buf_inner = [0; 1 << 20];
+                        let mut buf = ReadBuf::new(&mut buf_inner);
                         match tokio::io::AsyncRead::poll_read(
                             std::pin::Pin::new(&mut file),
                             cx,
                             &mut buf,
                         ) {
-                            Poll::Ready(Ok(n)) => {
-                                if n == 0 {
+                            Poll::Ready(Ok(_n)) => {
+                                if buf.filled().is_empty() {
                                     Poll::Ready(None)
                                 } else {
-                                    Poll::Ready(Some(Ok(Bytes::from(buf[0..n].to_vec()))))
+                                    Poll::Ready(Some(Ok(Bytes::from(buf.filled().to_vec()))))
                                 }
                             }
                             Poll::Ready(Err(e)) => {
@@ -434,7 +435,7 @@ async fn new_data_small(
         "key" => &key,
         "content-type" => content_type,
         "content-length" => data.len(),
-        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64),
+        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64)?,
     );
     Ok(key)
 }
@@ -515,7 +516,7 @@ async fn new_data<S: Stream<Item = Result<B, warp::Error>> + Unpin, B: Buf>(
     let mut f = HashWriter::<Sha256, _>::new(tokio::fs::File::create(tmp.join(&tmp_file)).await?);
     tokio::io::copy(
         &mut data
-            .map_ok(|mut buf| buf.to_bytes())
+            .map_ok(|mut buf| buf.copy_to_bytes(buf.remaining()).to_vec())
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
             .into_async_read()
             .compat_mut(),
@@ -540,7 +541,7 @@ async fn new_data<S: Stream<Item = Result<B, warp::Error>> + Unpin, B: Buf>(
         "key" => &key,
         "content-type" => content_type,
         "content-length" => len,
-        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64),
+        "expiration" => %time::OffsetDateTime::from_unix_timestamp(expiration as i64)?,
     );
     Ok(key)
 }
@@ -670,7 +671,7 @@ async fn main() -> Result<(), AnyError> {
                 }
             }
             slog::info!(sesh_cleaner_logger, "session cleaner complete"; "deleted" => deleted);
-            tokio::time::delay_for(HOUR).await;
+            tokio::time::sleep(HOUR).await;
         }
     });
     let data_tree = db.open_tree("data")?;
@@ -718,7 +719,7 @@ async fn main() -> Result<(), AnyError> {
                 }
             }
             slog::info!(expiration_cleaner_logger, "expiration cleaner complete"; "deleted" => deleted);
-            tokio::time::delay_for(HOUR).await;
+            tokio::time::sleep(HOUR).await;
         }
     });
     let filter = warp::filters::any::any()
@@ -819,7 +820,7 @@ async fn main() -> Result<(), AnyError> {
         .or(warp::path!("api" / "data")
             .and(warp::path::end())
             .and(warp::post())
-            .and(warp::cookie("session"))
+            .and(warp::cookie::<String>("session"))
             .map(|_| bad_request("Missing Content-Type")))
         .or(warp::path!("api" / "data")
             .and(warp::path::end())
@@ -909,7 +910,7 @@ async fn main() -> Result<(), AnyError> {
             std::env::var("PORT")
                 .map_err(Error::from)
                 .and_then(|p| p.parse().map_err(Error::from))
-                .unwrap_or(80_u16),
+                .unwrap_or(80_u16)
         ))
         .await;
     Ok(())

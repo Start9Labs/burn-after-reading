@@ -1,7 +1,7 @@
 id: burn-after-reading
 title: "Burn After Reading"
-version: 0.1.4
-release-notes: "Upgrade to EmbassyOS v0.3.0"
+version: 0.1.5
+release-notes: "Update to run on x86_64 architecture"
 license: gnu
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
@@ -28,61 +28,19 @@ main:
 health-checks:
   interface:
     name: Web Interface
-    success-message: The user interface for interacting with Burn After Reading can be accessed via web browser.
-    type: docker
-    image: main
-    entrypoint: check-web.sh
-    args: []
-    io-format: json
-    inject: true
+    success-message: The user interface is ready to visit in a web browser
+    type: script
 config:
   get:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args: 
-      - config
-      - get
-      - /root
-      - "/mnt/assets/config_spec.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
   set:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - set
-      - "burn-after-reading"
-      - /root
-      - "/mnt/assets/config_rules.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
 properties:
-  type: docker
-  image: compat
-  system: true
-  entrypoint: compat
-  args:
-    - properties
-    - /root
-  mounts:
-    main: /root
-    compat: /mnt/assets
-  io-format: yaml
+  type: script
 dependencies: {}
 volumes:
   main:
     type: data
-  compat:
-    type: assets
 alerts: {}
 interfaces:
   main:
@@ -128,3 +86,12 @@ backup:
       BACKUP: /mnt/backup
       main: /root/data
     io-format: yaml
+migrations:
+  from:
+    "*":
+      type: script
+      args: ["from"]
+  to:
+    "*":
+      type: script
+      args: ["to"]

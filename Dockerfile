@@ -5,8 +5,8 @@ RUN apk add bash curl tini
 
 WORKDIR /root
 
-ADD ./backend/target/aarch64-unknown-linux-musl/release/burn-after-reading /usr/local/bin/burn-after-reading
-ADD ./check-web.sh /usr/local/bin/check-web.sh
-RUN chmod +x /usr/local/bin/check-web.sh
+# aarch64 or x86_64
+ARG ARCH
+ADD ./backend/target/${ARCH}-unknown-linux-musl/release/burn-after-reading /usr/local/bin/burn-after-reading
 
 ENTRYPOINT [ "tini", "/usr/local/bin/burn-after-reading" ]
