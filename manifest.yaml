@@ -1,7 +1,9 @@
 id: burn-after-reading
 title: "Burn After Reading"
 version: 0.1.5
-release-notes: "Update to run on x86_64 architecture"
+release-notes: | 
+  * Update to run on x86_64 architecture
+  * Utilize new eOS APIs
 license: gnu
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
@@ -17,13 +19,12 @@ assets:
   icon: icon.png
   instructions: instructions.md
 main:
-  type: docker
-  image: main
-  entrypoint: tini
-  args: ["/usr/local/bin/burn-after-reading"]
-  mounts:
-    main: /root
-  io-format: yaml
+  type: script
+containers:
+  main:
+    image: main
+    mounts:
+      main: /root
 health-checks:
   interface:
     name: Web Interface
