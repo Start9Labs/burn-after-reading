@@ -1,0 +1,11 @@
+{
+  "include": ["startos/**/*.ts"],
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "None",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
