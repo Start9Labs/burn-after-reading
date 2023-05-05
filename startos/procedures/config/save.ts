@@ -14,11 +14,10 @@ export const save: Save<WrapperData, ConfigSpec, Manifest> = async ({
   input,
   dependencies,
 }) => {
-  await utils.setOwnWrapperData('/config', input)
   const dependenciesReceipt = await effects.setDependencies([])
 
   return {
     dependenciesReceipt,
-    restart: true,
+    restart: false,
   }
 }

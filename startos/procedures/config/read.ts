@@ -10,6 +10,4 @@ import { Read } from '@start9labs/start-sdk/lib/config/setupConfig'
 export const read: Read<WrapperData, ConfigSpec> = async ({
   effects,
   utils,
-}) => {
-  return utils.getOwnWrapperData('/config').once()
-}
+}) => {}

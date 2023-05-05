@@ -14,7 +14,7 @@ export const main: ExpectedExports.main = setupMain<WrapperData>(
      *
      * In this section, you will fetch any resources or run any commands necessary to run the service
      */
-    await effects.console.info('Starting Burn After Reading!')
+    console.info('Starting Burn After Reading!')
 
     /**
      * ======================== Interfaces ========================
@@ -67,7 +67,7 @@ export const main: ExpectedExports.main = setupMain<WrapperData>(
       id: 'webui',
       description: 'The web interface of Burn After Reading',
       ui: true,
-      basic: null,
+      username: null,
       path: '',
       search: {},
     })
