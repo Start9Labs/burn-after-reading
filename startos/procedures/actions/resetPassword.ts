@@ -29,15 +29,17 @@ const input = Config.of({
  *
  * If no input is required, FormSpec would be null
  */
-export const setPassword = createAction<WrapperData, typeof input>(
+export const resetPassword = createAction<WrapperData, typeof input>(
   {
     name: 'Reset Password',
     description: 'Resets your password to the one provided',
-    id: 'setPassword',
+    id: 'resetPassword',
     input,
-    allowedStatuses: 'only-stopped',
+    allowedStatuses: 'any',
   },
   async ({ effects, utils, input }) => {
+    await effects.vault.set({ key: 'password', value: input.password })
+
     return {
       message: 'Password changed successfully and saved to your Vault.',
       value: {
