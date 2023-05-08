@@ -1,7 +1,6 @@
-burn-after-reading.db
-burn-after-reading.s9pk
-image.tar
-frontend/.angular
+*.s9pk
+procedures/*.js
+node_modules/
+.DS_Store
 .vscode/
 docker-images
-scripts/*.js

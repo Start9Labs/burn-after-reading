@@ -19,6 +19,7 @@ use hyper::{
     Body, Method, Response, StatusCode, Uri,
 };
 use lazy_static::lazy_static;
+use pwhash::bcrypt;
 use sha2::{Digest, Sha256};
 use slog::Drain;
 use tokio::io::{AsyncWrite, AsyncWriteExt, ReadBuf};
@@ -244,20 +245,18 @@ struct Login {
 }
 
 async fn login(
-    pwd: Arc<String>,
+    pwd_hash: String,
     sesh_tree: sled::Tree,
     login: Login,
 ) -> Result<Response<Body>, Error> {
-    if login.user == "admin" && &*pwd == &login.password {
+    if login.user == "admin" && bcrypt::verify(&login.password, &pwd_hash) {
         let mut session = vec![0; 16];
         rand::RngCore::fill_bytes(&mut rand::thread_rng(), &mut session);
         session.extend_from_slice(login.user.as_bytes());
         let exp = SystemTime::now().duration_since(UNIX_EPOCH)? + (DAY * 7);
         sesh_tree.insert(&session, &u64::to_be_bytes(exp.as_secs()))?;
         let cookie = Cookie::build("session", base64::encode(&session))
-            .expires(time::OffsetDateTime::from_unix_timestamp(
-                exp.as_secs() as i64
-            ).ok())
+            .expires(time::OffsetDateTime::from_unix_timestamp(exp.as_secs() as i64).ok())
             .path("/api")
             .http_only(true)
             .same_site(cookie::SameSite::Strict)
@@ -307,11 +306,11 @@ async fn data(
                     let len = file.metadata().await?.len();
                     let stream: Box<
                         dyn Stream<
-                            Item = Result<
-                                Bytes,
-                                Box<dyn std::error::Error + 'static + Sync + Send>,
-                            >,
-                        >
+                                Item = Result<
+                                    Bytes,
+                                    Box<dyn std::error::Error + 'static + Sync + Send>,
+                                >,
+                            >
                             + 'static
                             + Send,
                     > = Box::new(futures::stream::poll_fn(move |cx| {
@@ -551,56 +550,17 @@ struct NewDataRes {
     hash: String,
 }
 
-#[derive(serde::Deserialize)]
-struct Config {
-    password: String,
-}
-
-#[derive(serde::Serialize)]
-pub struct Properties {
-    version: u8,
-    data: Data,
-}
-
-#[derive(serde::Serialize)]
-pub struct Data {
-    #[serde(rename = "Password")]
-    password: Property,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "kebab-case")]
-#[serde(tag = "type")]
-pub enum Property {
-    String {
-        value: String,
-        description: Option<String>,
-        copyable: bool,
-        qr: bool,
-        masked: bool,
-    },
-}
-
 #[tokio::main]
 async fn main() -> Result<(), AnyError> {
-    let cfg: Config =
-        serde_yaml::from_str(&tokio::fs::read_to_string("start9/config.yaml").await?)?;
-    tokio::fs::write(
-        "start9/stats.yaml",
-        serde_yaml::to_string(&Properties {
-            version: 2,
-            data: Data {
-                password: Property::String {
-                    value: cfg.password.clone(),
-                    description: None,
-                    copyable: true,
-                    qr: false,
-                    masked: true,
-                },
-            },
-        })?,
-    )
-    .await?;
+    let pwd_hash: String;
+    if Path::new("pwd.txt").exists() {
+        let pwd: String = serde_yaml::from_str(&tokio::fs::read_to_string("pwd.txt").await?)?;
+        pwd_hash = bcrypt::hash(&pwd).unwrap();
+        tokio::fs::write("pwd-hash.txt", &pwd_hash).await?;
+        tokio::fs::remove_file("pwd.txt").await?;
+    } else {
+        pwd_hash = serde_yaml::from_str(&tokio::fs::read_to_string("pwd-hash.txt").await?)?;
+    }
     if let Ok(metadata) = tokio::fs::metadata("tmp").await {
         if metadata.is_dir() {
             tokio::fs::remove_dir_all("tmp").await?;
@@ -641,7 +601,6 @@ async fn main() -> Result<(), AnyError> {
 
     let db = sled::open("burn-after-reading.db")?;
 
-    let pwd = Arc::new(cfg.password);
     let sesh_tree = db.open_tree("sessions")?;
     let sesh_tree_data = sesh_tree.clone();
     let sesh_tree_data_small = sesh_tree.clone();
@@ -834,10 +793,10 @@ async fn main() -> Result<(), AnyError> {
             .and(warp::post())
             .and(warp::body::json())
             .and_then(move |login_info| {
-                let pwd = pwd.clone();
+                let pwd_hash = pwd_hash.clone();
                 let sesh_tree = sesh_tree.clone();
                 failable(login_logger.clone(), "login", move || {
-                    login(pwd, sesh_tree, login_info)
+                    login(pwd_hash, sesh_tree, login_info)
                 })
             }))
         .or(warp::path!("api" / "login")
@@ -910,7 +869,7 @@ async fn main() -> Result<(), AnyError> {
             std::env::var("PORT")
                 .map_err(Error::from)
                 .and_then(|p| p.parse().map_err(Error::from))
-                .unwrap_or(80_u16)
+                .unwrap_or(80_u16),
         ))
         .await;
     Ok(())
