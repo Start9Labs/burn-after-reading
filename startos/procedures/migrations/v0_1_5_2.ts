@@ -7,7 +7,7 @@ export const v0_1_5_2 = new Migration({
   up: async ({ effects }) => {
     // get password from config.yaml
     const configYaml = load(
-      await readFile('/root/start9/config.yaml', 'base64'),
+      await readFile('/root/start9/config.yaml', 'utf-8'),
     ) as { password: string }
 
     // Save password to vault

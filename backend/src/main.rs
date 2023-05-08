@@ -9,6 +9,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Error as AnyError};
 use async_compat::CompatExt;
+use base64::Engine;
 use cookie::Cookie;
 use futures::{Stream, TryFutureExt, TryStreamExt};
 use generic_array::GenericArray;
@@ -19,7 +20,6 @@ use hyper::{
     Body, Method, Response, StatusCode, Uri,
 };
 use lazy_static::lazy_static;
-use pwhash::bcrypt;
 use sha2::{Digest, Sha256};
 use slog::Drain;
 use tokio::io::{AsyncWrite, AsyncWriteExt, ReadBuf};
@@ -245,22 +245,27 @@ struct Login {
 }
 
 async fn login(
-    pwd_hash: String,
+    pwd_hash: Arc<String>,
     sesh_tree: sled::Tree,
     login: Login,
 ) -> Result<Response<Body>, Error> {
-    if login.user == "admin" && bcrypt::verify(&login.password, &pwd_hash) {
+    if login.user == "admin"
+        && argon2::verify_encoded(&pwd_hash, &login.password.as_bytes()).is_ok()
+    {
         let mut session = vec![0; 16];
         rand::RngCore::fill_bytes(&mut rand::thread_rng(), &mut session);
         session.extend_from_slice(login.user.as_bytes());
         let exp = SystemTime::now().duration_since(UNIX_EPOCH)? + (DAY * 7);
         sesh_tree.insert(&session, &u64::to_be_bytes(exp.as_secs()))?;
-        let cookie = Cookie::build("session", base64::encode(&session))
-            .expires(time::OffsetDateTime::from_unix_timestamp(exp.as_secs() as i64).ok())
-            .path("/api")
-            .http_only(true)
-            .same_site(cookie::SameSite::Strict)
-            .finish();
+        let cookie = Cookie::build(
+            "session",
+            base64::engine::general_purpose::URL_SAFE.encode(&session),
+        )
+        .expires(time::OffsetDateTime::from_unix_timestamp(exp.as_secs() as i64).ok())
+        .path("/api")
+        .http_only(true)
+        .same_site(cookie::SameSite::Strict)
+        .finish();
         Ok(base_res()
             .status(StatusCode::NO_CONTENT)
             .header("set-cookie", cookie.to_string())
@@ -272,7 +277,8 @@ async fn login(
 }
 
 async fn logout(sesh_tree: sled::Tree, session: String) -> Result<Response<Body>, Error> {
-    let data = base64::decode(session)
+    let data = base64::engine::general_purpose::URL_SAFE
+        .decode(&session)
         .with_status(StatusCode::BAD_REQUEST)
         .with_message(|| anyhow!("parsing session cookie"))?;
     sesh_tree.remove(&data)?;
@@ -420,10 +426,7 @@ async fn new_data_small(
     }
     let mut hasher = Sha256::new();
     hasher.update(&*data);
-    let key = base64::encode_config(
-        &hasher.finalize(),
-        base64::Config::new(base64::CharacterSet::UrlSafe, true),
-    );
+    let key = base64::engine::general_purpose::URL_SAFE.encode(&hasher.finalize());
     data_tree.insert(&key, &*data)?;
     content_type_tree.insert(&key, content_type.as_bytes())?;
     expiration_tree.insert(&key, &u64::to_be_bytes(expiration))?;
@@ -522,10 +525,7 @@ async fn new_data<S: Stream<Item = Result<B, warp::Error>> + Unpin, B: Buf>(
         &mut f,
     )
     .await?;
-    let key = base64::encode_config(
-        &f.finish().await?,
-        base64::Config::new(base64::CharacterSet::UrlSafe, true),
-    );
+    let key = base64::engine::general_purpose::URL_SAFE.encode(&f.finish().await?);
     let big = Path::new("big");
     tokio::fs::create_dir_all(big).await?;
     tokio::fs::rename(tmp.join(&tmp_file), big.join(&key)).await?;
@@ -552,14 +552,23 @@ struct NewDataRes {
 
 #[tokio::main]
 async fn main() -> Result<(), AnyError> {
-    let pwd_hash: String;
-    if Path::new("pwd.txt").exists() {
+    let pwd_hash: Arc<String>;
+    if tokio::fs::metadata("pwd.txt").await.is_ok() {
         let pwd: String = serde_yaml::from_str(&tokio::fs::read_to_string("pwd.txt").await?)?;
-        pwd_hash = bcrypt::hash(&pwd).unwrap();
-        tokio::fs::write("pwd-hash.txt", &pwd_hash).await?;
+        pwd_hash = Arc::new(
+            argon2::hash_encoded(
+                pwd.as_bytes(),
+                &rand::random::<[u8; 8]>(),
+                &Default::default(),
+            )
+            .unwrap(),
+        );
+        tokio::fs::write("pwd-hash.txt", &*pwd_hash).await?;
         tokio::fs::remove_file("pwd.txt").await?;
     } else {
-        pwd_hash = serde_yaml::from_str(&tokio::fs::read_to_string("pwd-hash.txt").await?)?;
+        pwd_hash = Arc::new(serde_yaml::from_str(
+            &tokio::fs::read_to_string("pwd-hash.txt").await?,
+        )?);
     }
     if let Ok(metadata) = tokio::fs::metadata("tmp").await {
         if metadata.is_dir() {

@@ -7,7 +7,7 @@ import { actionsMetadata } from './procedures/actions'
 export const manifest = setupManifest({
   id: 'burn-after-reading',
   title: 'Burn After Reading',
-  version: '0.1.5.1',
+  version: '0.1.5.2',
   releaseNotes: 'Revamped for StartOS 0.4.0',
   license: 'mit',
   replaces: Array<string>('ViaCrypt'),
