@@ -5,6 +5,7 @@ import { setupUninstall } from '@start9labs/start-sdk/lib/inits/setupUninstall'
 import { setupInit } from '@start9labs/start-sdk/lib/inits/setupInit'
 import { getDefaultString } from '@start9labs/start-sdk/lib/util/getDefaultString'
 import { randomPassword } from '../util'
+import { writeFile } from 'fs/promises'
 
 /**
  * Here you define arbitrary code that runs once, on fresh install only
@@ -14,6 +15,8 @@ const install = setupInstall<WrapperData>(async ({ effects, utils }) => {
   const password = getDefaultString(randomPassword)
   // Save password to vault
   await effects.vault.set({ key: 'password', value: password })
+  // Save password to dir
+  await writeFile('pwd.txt', password)
 })
 
 /**

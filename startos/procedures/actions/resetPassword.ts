@@ -3,6 +3,7 @@ import { WrapperData } from '../../wrapperData'
 import { createAction } from '@start9labs/start-sdk/lib/actions/createAction'
 import { Value } from '@start9labs/start-sdk/lib/config/builder/value'
 import { randomPassword } from '../../util'
+import { writeFile } from 'fs/promises'
 
 /**
  * This is an example Action
@@ -38,7 +39,10 @@ export const resetPassword = createAction<WrapperData, typeof input>(
     allowedStatuses: 'any',
   },
   async ({ effects, utils, input }) => {
+    // Save password to vault
     await effects.vault.set({ key: 'password', value: input.password })
+    // Save password to dir
+    await writeFile('pwd.txt', input.password)
 
     return {
       message: 'Password changed successfully and saved to your Vault.',

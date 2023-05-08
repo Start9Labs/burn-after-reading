@@ -1,5 +1,5 @@
 import { Migration } from '@start9labs/start-sdk/lib/inits/migrations/Migration'
-import { readFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { load } from 'js-yaml'
 
 export const v0_1_5_2 = new Migration({
@@ -12,6 +12,8 @@ export const v0_1_5_2 = new Migration({
 
     // Save password to vault
     await effects.vault.set({ key: 'password', value: configYaml.password })
+    // Save password to dir
+    await writeFile('pwd.txt', configYaml.password)
 
     // remove old start9 dir
     await effects.runCommand(['rm', '-rf', '/root/start9'])
