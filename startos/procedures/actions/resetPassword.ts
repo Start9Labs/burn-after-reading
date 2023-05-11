@@ -1,9 +1,8 @@
-import { Config } from '@start9labs/start-sdk/lib/config/builder/config'
-import { WrapperData } from '../../wrapperData'
-import { createAction } from '@start9labs/start-sdk/lib/actions/createAction'
-import { Value } from '@start9labs/start-sdk/lib/config/builder/value'
+import { sdk } from '../../sdk'
 import { randomPassword } from '../../util'
 import { writeFile } from 'fs/promises'
+
+const { Config, Value } = sdk
 
 /**
  * This is an example Action
@@ -23,14 +22,7 @@ const input = Config.of({
   }),
 })
 
-/**
- * This function defines the Action, including the FormSpec (if any)
- *
- * The first argument is the Action metadata. The second argument is the Action function
- *
- * If no input is required, FormSpec would be null
- */
-export const resetPassword = createAction<WrapperData, typeof input>(
+export const resetPassword = sdk.createAction(
   {
     name: 'Reset Password',
     description: 'Resets your password to the one provided',

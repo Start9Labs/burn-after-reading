@@ -1,8 +1,8 @@
-import { Migration } from '@start9labs/start-sdk/lib/inits/migrations/Migration'
+import { sdk } from '../../sdk'
 import { readFile, writeFile } from 'fs/promises'
 import { load } from 'js-yaml'
 
-export const v0_1_5_2 = new Migration({
+export const v0_1_5_2 = sdk.Migration.of({
   version: '0.1.5.2',
   up: async ({ effects }) => {
     // get password from config.yaml

@@ -1,3 +1,3 @@
-export interface Vault {
+export interface Vault extends Record<string, string> {
   password: string
 }
