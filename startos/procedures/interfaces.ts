@@ -6,8 +6,6 @@ export const uiId = 'webui'
 
 /**
  * ======================== Interfaces ========================
- *
- * In this section, you will decide how the service will be exposed to the outside world
  */
 export const setInterfaces = sdk.setupInterfaces(
   configSpec,
@@ -18,6 +16,8 @@ export const setInterfaces = sdk.setupInterfaces(
       name: 'Web UI',
       id: uiId,
       description: 'The web user interface of Burn After Reading',
+      hasPrimary: true,
+      disabled: false,
       ui: true,
       username: null,
       path: '',

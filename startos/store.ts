@@ -1,1 +1,1 @@
-export interface Store {}
+export type Store = {}

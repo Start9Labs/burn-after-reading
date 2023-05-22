@@ -3,40 +3,45 @@ import { checkPortListening } from '@start9labs/start-sdk/lib/health/checkFns'
 import { ExpectedExports } from '@start9labs/start-sdk/lib/types'
 import { HealthReceipt } from '@start9labs/start-sdk/lib/health/HealthReceipt'
 import { Daemons } from '@start9labs/start-sdk/lib/mainFn/Daemons'
-import { uiPort } from './interfaces'
+import { uiId, uiPort } from './interfaces'
+import { configFile } from './config/file-models/config.json'
 
 export const main: ExpectedExports.main = sdk.setupMain(
   async ({ effects, utils, started }) => {
     /**
      * ======================== Setup ========================
-     *
-     * In this section, you will fetch any resources or run any commands necessary to run the service
      */
     console.info('Starting Burn After Reading!')
 
+    // @TODO use this file on FE/BE. User can choose which hostname to use for paste
+    const { primaryHostname, allHostnames } = await utils.networkInterface
+      .getOwn(uiId)
+      .const()
+
+    const hosts = [primaryHostname].concat(
+      allHostnames.filter(
+        (h) => !h.includes('.local') && h !== primaryHostname,
+      ),
+    )
+
+    await configFile.write({ hosts }, effects)
+
     /**
      * ======================== Additional Health Checks (optional) ========================
-     *
-     * In this section, you will define additional health checks beyond those associated with daemons
      */
     const healthReceipts: HealthReceipt[] = []
 
     /**
      * ======================== Daemons ========================
-     *
-     * In this section, you will create one or more daemons that define the service runtime
-     *
-     * Each daemon defines its own health check, which can optionally be exposed to the user
      */
     return Daemons.of({
       effects,
       started,
-      healthReceipts, // Provide the healthReceipts or [] to prove they were at least considered
+      healthReceipts,
     }).addDaemon('webui', {
-      command: '/usr/local/bin/burn-after-reading', // The command to start the daemon
+      command: '/usr/local/bin/burn-after-reading',
       ready: {
         display: 'Web Interface',
-        // The function to run to determine the health status of the daemon
         fn: () =>
           checkPortListening(effects, uiPort, {
             successMessage: 'The web interface is ready',

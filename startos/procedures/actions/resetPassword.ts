@@ -4,13 +4,6 @@ import { writeFile } from 'fs/promises'
 
 const { Config, Value } = sdk
 
-/**
- * This is an example Action
- *
- * By convention, each action receives its own file
- *
- * Actions optionally take an arbitrary config form as input
- */
 const input = Config.of({
   password: Value.text({
     name: 'Password',
