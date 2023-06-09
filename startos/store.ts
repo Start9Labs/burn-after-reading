@@ -1,1 +1,3 @@
-export type Store = {}
+export type Store = {
+  password: string
+}

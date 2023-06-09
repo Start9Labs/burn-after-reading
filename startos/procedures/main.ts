@@ -18,7 +18,7 @@ export const main: ExpectedExports.main = sdk.setupMain(
       .getOwn(uiId)
       .const()
 
-    const hosts = [primaryHostname].concat(
+    const hosts = [primaryHostname!].concat(
       allHostnames.filter(
         (h) => !h.includes('.local') && h !== primaryHostname,
       ),

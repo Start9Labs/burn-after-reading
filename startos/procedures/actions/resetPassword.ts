@@ -25,7 +25,7 @@ export const resetPassword = sdk.createAction(
   },
   async ({ effects, utils, input }) => {
     // Save password to vault
-    await effects.vault.set({ key: 'password', value: input.password })
+    await utils.store.setOwn('/password', input.password)
     // Save password to dir
     await writeFile('pwd.txt', input.password)
 
