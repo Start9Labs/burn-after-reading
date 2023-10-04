@@ -12,13 +12,11 @@ export class ConfigService {
   isMobile = isPlatform(window, 'ios') || isPlatform(window, 'android')
   isIos = isPlatform(window, 'ios')
   isAndroid = isPlatform(window, 'android')
-  isConsulate = window['platform'] === 'ios'
-  isDemo = this.appType === 'demo'
   isTor = isOnionTld(window.origin)
 
   constructor () {
     console.log('origin: ', this.origin)
-    console.log('mocks: ', this.appType)
+    console.log('mocks: ', this.appType === AppType.MOCK)
     console.log('ios: ', isPlatform(window, 'ios'))
     console.log('android: ', isPlatform(window, 'android'))
   }
@@ -27,7 +25,6 @@ export class ConfigService {
 export enum AppType {
   LIVE = 'live',
   MOCK = 'mock',
-  DEMO = 'demo',
 }
 
 function isOnionTld (str: string): boolean {

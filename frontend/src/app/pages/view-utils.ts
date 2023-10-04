@@ -30,15 +30,11 @@ export class ViewUtils {
   }
 
   getImageUrl (a: ArrayBuffer, contentType: string): string | SafeUrl {
-    if (this.config.isConsulate) {
-      return this.sanitizer.bypassSecurityTrustUrl(arrayBufferDataURL(a, contentType))
-    } else {
-      return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(
-        new Blob(
-          [a], { type: contentType },
-        ),
-      ))
-    }
+    return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(
+      new Blob(
+        [a], { type: contentType },
+      ),
+    ))
   }
 
   async alertError (e: Error): Promise<void> {
@@ -56,45 +52,6 @@ export class ViewUtils {
 
   ngOnDestroy () {
     this.subs.forEach(s => s.unsubscribe())
-  }
-
-  protected async alertDemo (): Promise<void> {
-    return new Promise(async resolve => {
-      const confirm = await this.alertController.create({
-        cssClass: 'alert-demo',
-        header: 'Warning',
-        message: `<h6>This is a <i>hosted</i> instance of Burn After Reading.</h6>
-                  <p>Since you are not the server operator, you can never be 100% certain that your data are private or secure.</p>
-                  <p>You can run your own, private instance with the click of a button using the Start9 Embassy.</p>`,
-        buttons: [
-          {
-            text: 'Run my Own',
-            handler: () => {
-              const a = document.createElement('a')
-              const site = (this.config.isConsulate || !this.config.isTor) ? 'https://start9labs.com' : 'http://privacy34kn4ez3y3nijweec6w4g54i3g54sdv7r5mr6soma3w4begyd.onion/'
-              a.href = site
-              a.target = '_blank'
-              pauseFor(500).then(() => a.click())
-              return resolve()
-            },
-          },
-          {
-            text: 'Use Demo',
-            role: 'cancel',
-            handler: () => resolve(),
-          },
-        ],
-      })
-
-      await confirm.present()
-
-      const alert = document.getElementsByClassName('alert-demo').item(0)
-      this.cleanup(
-        fromEvent(alert, 'keyup')
-        .pipe(filter((k: KeyboardEvent) => isEnter(k)))
-        .subscribe(() => confirm.dismiss()),
-      )
-    })
   }
 }
 

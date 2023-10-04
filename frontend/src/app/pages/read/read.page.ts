@@ -58,10 +58,6 @@ export class ReadPage extends ViewUtils implements OnInit {
   }
 
   async preProcesses () {
-    if (this.config.isDemo) {
-      await pauseFor(500).then(() => this.alertDemo())
-    }
-
     return this.loaderService.of({
       spinner: 'lines',
       message: 'This could take a while...',
@@ -172,18 +168,9 @@ export class ReadPage extends ViewUtils implements OnInit {
       const blob = new Blob([this.presentableContent.content], {
         type: this.presentableContent.contentType,
       })
-      if (this.config.isConsulate) {
-        link.href = await blobToBase64(blob)
-      } else {
-        link.href = URL.createObjectURL(blob)
-      }
 
+      link.href = URL.createObjectURL(blob)
       link.download = title
-
-      if (this.config.isConsulate) {
-        // do this so that WKWebview can find this link to look up its title
-        document.body.append(link)
-      }
 
       link.click()
     } catch (e) {

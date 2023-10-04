@@ -3,7 +3,6 @@
     <ion-img slot="start" class="headerImg" src="assets/icon/burn-after-reading.png"></ion-img>
     <ion-title style="padding: 6px">
       <ion-text>Burn After Reading</ion-text>
-      <div *ngIf="config.isDemo"><img style="max-width: 80px" src="assets/icon/s9-full.png"/></div>
     </ion-title>
     <ion-buttons slot="end">
       <ion-button *ngIf="vars.state !== WriteViewState.UNAUTH" (click)="logout()">
@@ -15,7 +14,7 @@
 
 
 <ion-content
-  *ngIf="{ shields: shields$ | async, state: $state$ | async, app: config.appType } as vars"
+  *ngIf="{ shields: shields$ | async, state: $state$ | async } as vars"
   style="--overflow: hidden"
 >
   <!-- Framed Content -->
@@ -65,7 +64,6 @@
           Login
         </ion-button>
       </ion-label>
-      <ion-text *ngIf="config.isDemo && vars.state === WriteViewState.UNAUTH" color="medium">For this demo, the password is: 'demo'</ion-text >
     </div>
     <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
     <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
@@ -118,7 +116,6 @@
       <!-- message -->
       <div *ngIf="upload.segment === 'message'">
         <textarea
-          [maxlength]="config.isDemo ? 10000 : 'none'"
           class="messageArea"
           [(ngModel)]="upload.message"
           placeholder="Type Message"
@@ -132,7 +129,7 @@
 
       <!-- file upload -->
       <div
-        *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && !upload.file"
+        *ngIf="upload.segment === 'file' && !upload.file"
         class="dropArea " [class.dropAreaMobile] = 'config.isMobile'
         appDnd
         (onFileDropped)="handleFileDrop($event)"
@@ -155,21 +152,15 @@
           />
         </ion-button>
       </div>
-      <!-- No files in demo -->
-      <div class="dropAreaFilled" *ngIf="vars.app === AppType.DEMO && upload.segment ==='file'">
-        <ion-icon color="medium" style="font-size: 42px" name="document-lock-outline"></ion-icon>
-        <p style="text-align: center">File uploads not supported in this demo</p>
-      </div>
-
       <!-- regular file uploaded -->
-      <div class="dropAreaFilled" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && !upload.contentImage">
+      <div class="dropAreaFilled" *ngIf="upload.segment === 'file' && upload.file && !upload.contentImage">
         <h4 style="text-align: center">{{ upload.file.name }}</h4>
         <h6>{{ upload.readableFileSize }}</h6>
         <br />
         <ion-button fill="outline" color="danger" (click)="reset('file')">Remove</ion-button>
       </div>
       <!-- image file uploaded -->
-      <div class="dropAreaFilled" style="position: relative; padding: 0px" *ngIf="vars.app !== AppType.DEMO && upload.segment === 'file' && upload.file && upload.contentImage">
+      <div class="dropAreaFilled" style="position: relative; padding: 0px" *ngIf="upload.segment === 'file' && upload.file && upload.contentImage">
         <img [src]="upload.contentImage" class="uploaded-image">
         <ion-button fill="clear" color="danger" size="small" style="position: absolute; bottom: 2%; margin: 0px !important" (click)="reset('file')">
           Remove ({{upload.readableFileSize}})

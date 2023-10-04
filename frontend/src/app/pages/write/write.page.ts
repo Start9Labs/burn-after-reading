@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { BehaviorSubject, fromEvent, Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { AppType, ConfigService } from 'src/app/services/config.service'
+import { ConfigService } from 'src/app/services/config.service'
 import { LoginService } from 'src/app/services/login.service'
 import { LoaderService } from 'src/app/services/loader.service'
 import { AuthState, AuthStore } from 'src/app/services/auth.store'
@@ -30,7 +30,6 @@ export class WritePage extends ViewUtils implements OnInit {
   shields$: Observable<boolean> = this.$state$.asObservable().pipe(map(s => s !== WriteViewState.WRITING))
 
   WriteViewState = WriteViewState
-  AppType = AppType
 
   iosKeyboardOpen = false
 
@@ -65,8 +64,8 @@ export class WritePage extends ViewUtils implements OnInit {
       minutes: { display: '10 minutes', count: 10, unit: 'minutes' },
       hours: { display: '6 Hours', count: 6, unit: 'hours' },
       day: { display: '1 Day', count: 1, unit: 'days' },
-      someDays: { display: '3 Days', count: 3, unit: 'days', disabled: this.config.isDemo },
-      week: { display: '1 Week', count: 7, unit: 'days', disabled: this.config.isDemo },
+      someDays: { display: '3 Days', count: 3, unit: 'days' },
+      week: { display: '1 Week', count: 7, unit: 'days' },
     }
     this.selectedExpiration = 'day'
 
@@ -91,10 +90,6 @@ export class WritePage extends ViewUtils implements OnInit {
         },
       }),
     )
-
-    if (this.config.isDemo) {
-      return pauseFor(500).then(() => this.alertDemo())
-    }
   }
 
   loginOnEnter (event: KeyboardEvent) {
@@ -163,16 +158,6 @@ export class WritePage extends ViewUtils implements OnInit {
     await alert.present()
   }
 
-  async presentAlertEncryptionRequired () {
-    const alert = await this.alertController.create({
-      header: 'Encryption Required',
-      message: 'You must encrypt your message/file in this demo',
-      cssClass: 'error-alert'
-    })
-
-    await alert.present()
-  }
-
   handleFileDrop (e: any) {
     const files = e.dataTransfer.files
     if (!files) return
@@ -209,10 +194,6 @@ export class WritePage extends ViewUtils implements OnInit {
   }
 
   async save () {
-    if (this.config.isDemo && !this.encrypt.value) {
-      return this.presentAlertEncryptionRequired()
-    }
-
     if (this.encrypt.value && this.upload.file) {
       const go = await this.checkEncryptedFileSizeRestrictions(this.upload.file)
       if (!go) return
@@ -324,15 +305,12 @@ async function fileToArrayBuffer (f: File): Promise<ArrayBuffer> {
 }
 
 export enum FileTShirtSize {
-  SMALL = 1,
-  DEMO_LARGE = 10 * Kilo,
   MEDIUM = 2.5 * Mega,
   LARGE = 50 * Mega,
 }
 
 type ExpirationOption = {
-  display: string,
-  unit: 'days' | 'hours' | 'minutes' | 'seconds',
-  count: number,
-  disabled?: boolean
+  display: string
+  unit: 'days' | 'hours' | 'minutes' | 'seconds'
+  count: number
 }
