@@ -1,0 +1,78 @@
+name: Release Service
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*"
+
+jobs:
+  ReleasePackage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Set up Rust Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Get StartOS Hash
+        run: echo "STARTOSHASH=$(git ls-remote https://github.com/Start9Labs/start-os --branch sdk | awk '{ print $1}')" >> $GITHUB_ENV
+      - name: Cache Packages
+        uses: buildjet/cache@v3
+        id: packageCache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-burn-after-reading-${{ env.STARTOSHASH }}
+      - name: Install Dependencies
+        run: |
+          sudo snap install yq deno
+          sudo apt-get install -y build-essential openssl libssl-dev libc6-dev clang libclang-dev ca-certificates
+      - name: Checkout services repository
+        uses: actions/checkout@v3
+      - name: Install Package Manager
+        id: packageManager
+        if: steps.packageCache.outputs.cache-hit != 'true'
+        run: |
+          cd ~/ && git clone https://github.com/Start9Labs/start-os.git --branch sdk;
+          cd start-os;
+          git submodule update --init --recursive
+          cd backend;
+          export RUSTFLAGS="";
+          export OS_ARCH=$(uname -m);
+          ./install-sdk.sh;
+      - name: Build the service package
+        run: |
+          git submodule update --init --recursive
+          start-sdk init
+          make
+      - name: Generate sha256 checksum
+        run: |
+          sha256sum burn-after-reading.s9pk > burn-after-reading.s9pk.sha256
+      - name: Generate changelog
+        run: |
+          echo "## What's Changed" > change-log.txt
+          yq e '.release-notes' manifest.yaml >> change-log.txt
+          echo "## SHA256 Hash" >> change-log.txt
+          echo '```' >> change-log.txt
+          sha256sum burn-after-reading.s9pk >> change-log.txt
+          echo '```' >> change-log.txt
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: burn-after-reading ${{ github.ref_name }}
+          prerelease: true
+          body_path: change-log.txt
+          files: |
+            burn-after-reading.s9pk
+            burn-after-reading.s9pk.sha256
