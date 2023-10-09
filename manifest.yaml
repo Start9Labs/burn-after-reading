@@ -1,8 +1,10 @@
 id: burn-after-reading
 title: "Burn After Reading"
-version: 0.1.5
-release-notes: "Update to run on x86_64 architecture"
-license: gnu
+version: 0.1.6
+release-notes: |
+  * Base image updated to alpine 3.18
+  * Smaller and optimised build
+license: GNU
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
 support-site: "https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com"
