@@ -13,7 +13,7 @@ build: ["make"]
 description:
   short: Share messages and files that are destroyed after they are viewed
   long: |
-    A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.
+    A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Start9 server, and there are no trusted 3rd parties.
 assets:
   license: LICENSE
   icon: icon.png

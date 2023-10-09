@@ -3,7 +3,7 @@
 ## Config
 If you choose to change your random, default BAR password, we recommend using an equally complex password and relying on your Vaultwarden Server to to save it.
 
-**Note**: You can change your password at any time by visiting the BAR Config in your Embassy app.
+**Note**: You can change your password at any time by visiting the BAR Config.
 
 ## Browsers
 1. Copy/paste your BAR Tor address into any Tor-enabled browser. Options include:
