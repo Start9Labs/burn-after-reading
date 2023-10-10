@@ -78,13 +78,13 @@ endif
 backend/target/x86_64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
 ifeq ($(ARCH),aarch64)
 else
-	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:x86_64-musl cargo +nightly build --release
+	docker run --rm -it -t -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:x86_64-musl cargo +nightly build --release
 endif
 
 backend/target/aarch64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
 ifeq ($(ARCH),x86_64)
 else
-	docker run --rm -it -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:aarch64-musl cargo +nightly build --release
+	docker run --rm -it -t -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src start9/rust-musl-cross:aarch64-musl cargo +nightly build --release
 endif
 
 backend/Cargo.toml: manifest.yaml
