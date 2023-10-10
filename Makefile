@@ -29,6 +29,16 @@ clean:
 	rm -rf docker-images
 	rm -f $(PKG_ID).s9pk 
 
+frontend/package.json: manifest.yaml
+	cat frontend/package.json | jq '.version = "$(PKG_VERSION)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
+	cat frontend/package.json | jq '.description = "$(shell yq e ".description.long" manifest.yaml)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
+
+frontend/node_modules: frontend/package.json
+	npm --prefix frontend ci
+
+frontend/dist: $(FRONTEND_SRC) frontend/node_modules
+	npm --prefix frontend run build
+
 verify: $(PKG_ID).s9pk
 	@start-sdk verify s9pk $(PKG_ID).s9pk
 	@echo " Done!"
@@ -83,16 +93,6 @@ backend/Cargo.toml: manifest.yaml
 
 backend/src/ui.pack: frontend/dist
 	web-static-pack-packer frontend/dist backend/src/ui.pack
-
-frontend/dist: $(FRONTEND_SRC) frontend/node_modules
-	npm --prefix frontend run build
-
-frontend/node_modules: frontend/package.json
-	npm --prefix frontend ci
-
-frontend/package.json: manifest.yaml
-	cat frontend/package.json | jq '.version = "$(PKG_VERSION)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
-	cat frontend/package.json | jq '.description = "$(shell yq e ".description.long" manifest.yaml)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
 
 scripts/embassy.js: $(TS_FILES)
 	deno bundle scripts/embassy.ts scripts/embassy.js
