@@ -4,6 +4,8 @@ version: 0.1.6
 release-notes: |
   * Base image updated to alpine 3.18
   * Smaller and optimised build
+  * Standardized and optimized icon
+  * Build dependencies update
 license: GNU
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
