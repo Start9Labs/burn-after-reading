@@ -1,7 +1,7 @@
 {
   "name": "burn-after-reading",
-  "version": "0.1.6",
-  "description": "A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Start9 server, and there are no trusted 3rd parties.",
+  "version": "0.1.5",
+  "description": "A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.",
   "private": true,
   "scripts": {
     "ng": "ng",
@@ -32,15 +32,24 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^14.2.5",
+    "@angular-eslint/builder": "14.4.0",
+    "@angular-eslint/eslint-plugin": "14.4.0",
+    "@angular-eslint/eslint-plugin-template": "14.4.0",
+    "@angular-eslint/schematics": "14.4.0",
+    "@angular-eslint/template-parser": "14.4.0",
     "@angular/cli": "^14.2.5",
     "@angular/compiler": "^14.2.5",
     "@angular/compiler-cli": "^14.2.5",
     "@angular/language-service": "^14.2.5",
     "@ionic/angular-toolkit": "^7.0.0",
     "@types/node": "^16.9.1",
-    "codelyzer": "^0.0.28",
+    "@typescript-eslint/eslint-plugin": "5.43.0",
+    "@typescript-eslint/parser": "5.43.0",
+    "eslint": "^8.28.0",
+    "eslint-plugin-import": "latest",
+    "eslint-plugin-jsdoc": "latest",
+    "eslint-plugin-prefer-arrow": "latest",
     "ts-node": "^10.9.1",
-    "tslint": "^6.1.3",
     "typescript": "^4.6.3",
     "web-streams-polyfill": "^3.0.1"
   }
