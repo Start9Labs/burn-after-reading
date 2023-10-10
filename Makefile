@@ -26,7 +26,8 @@ clean:
 	rm -rf frontend/dist
 	rm -rf frontend/node_modules
 	rm -rf backend/target
-	rm -f $(PKG_ID).s9pk
+	rm -rf docker-images
+	rm -f $(PKG_ID).s9pk 
 
 verify: $(PKG_ID).s9pk
 	@start-sdk verify s9pk $(PKG_ID).s9pk
