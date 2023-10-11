@@ -1,9 +1,9 @@
 [package]
 name = "burn-after-reading"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Aiden McClelland <me@drbonez.dev>"]
 edition = "2021"
-description = "A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties."
+description = "A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Start9 server, and there are no trusted 3rd parties."
 
 [features]
 demo = ["slog-bunyan"]

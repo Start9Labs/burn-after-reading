@@ -1,0 +1,65 @@
+name: Build Service
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths-ignore: ["*.md"]
+    branches: ["master", "next"]
+  push:
+    paths-ignore: ["*.md"]
+    branches: ["master", "next"]
+
+jobs:
+  BuildPackage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Set up Rust Toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Get StartOS Hash
+        run: echo "STARTOSHASH=$(git ls-remote https://github.com/Start9Labs/start-os --branch sdk | awk '{ print $1}')" >> $GITHUB_ENV
+      - name: Cache Packages
+        uses: buildjet/cache@v3
+        id: packageCache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-burn-after-reading-${{ env.STARTOSHASH }}
+      - name: Install Dependencies
+        run: |
+          sudo snap install yq deno
+          sudo apt-get install -y build-essential openssl libssl-dev libc6-dev clang libclang-dev ca-certificates
+          cargo install --force toml-cli web-static-pack-packer
+      - name: Checkout services repository
+        uses: actions/checkout@v3
+      - name: Install Package Manager
+        id: packageManager
+        if: steps.packageCache.outputs.cache-hit != 'true'
+        run: |
+          cd ~/ && git clone https://github.com/Start9Labs/start-os.git --branch sdk;
+          cd start-os;
+          git submodule update --init --recursive
+          cd backend;
+          export RUSTFLAGS="";
+          export OS_ARCH=$(uname -m);
+          ./install-sdk.sh;
+      - name: Build the service package
+        run: |
+          git submodule update --init --recursive
+          start-sdk init
+          make
+          mv burn-after-reading*s9pk ~/
+      - name: Upload .s9pk
+        uses: actions/upload-artifact@v3
+        with:
+          name: burn-after-reading.s9pk
+          path: ~/*.s9pk

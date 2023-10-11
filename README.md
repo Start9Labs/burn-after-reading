@@ -1,12 +1,12 @@
 # Burn After Reading
 
-Burn After Reading is a simple, fast, standalone pastebin service for the [Start9 Embassy](https://start9.com) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
+Burn After Reading is a simple, fast, standalone pastebin service for the [StartOS](https://github.com/start9Labs/start-os) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
 
 Using a Tor-enabled browser, you can try the hosted demo here: http://burrrrn6i4g4feosxlliwgfn5ocdznkxxkcfu5ftnwyzxk7fdbwfibyd.onion/.
 
 There is also a clearnet version here: https://burnafterreading.net.
 
-This repository also creates the `s9pk` package that is installed to run `burn-after-reading` on [embassyOS](https://github.com/Start9Labs/embassy-os/).
+This repository also creates the `s9pk` package that is installed to run `burn-after-reading` on [StartOS](https://github.com/Start9Labs/start-os/).
 
 ## Dependencies
 
@@ -19,7 +19,7 @@ Install the system dependencies below to build this project by following the ins
 - [jq](https://stedolan.github.io/jq/)
 - [toml-cli](https://crates.io/crates/toml-cli)
 - [web-static-pack-packer](https://crates.io/crates/web-static-pack-packer)
-- [embassy-sdk](https://github.com/Start9Labs/embassy-os/blob/master/backend/install-sdk.sh)
+- [start-sdk](https://github.com/Start9Labs/start-os/blob/sdk/backend/install-sdk.sh)
 - [make](https://www.gnu.org/software/make/)
 
 ## Cloning
@@ -33,33 +33,53 @@ cd burn-after-reading
 
 ## Building
 
-To build the `burn-after-reading` package, run the following command:
+After setting up your environment, build the `burn-after-reading` package by running:
 
 ```
 make
 ```
 
-## Installing (on embassyOS)
-
-Run the following commands to determine successful install:
-> :information_source: Change embassy-server-name.local to your Embassy address
+To build the `burn-after-reading` package for a single platform, run:
 
 ```
-embassy-cli auth login
-# Enter your embassy password
-embassy-cli --host https://embassy-server-name.local package install burn-after-reading.s9pk
+# for amd64
+make x86
 ```
 
-If you already have your `embassy-cli` config file setup with a default `host`, you can install simply by running:
+or
+
+```
+# for arm64
+make arm
+```
+
+## Installing (on StartOS)
+
+Via the StartOS web-UI:
+
+Go to System > Sideload Service and select the burn-after-reading.s9pk file you built.
+
+Via CLI (SSH'd into your server):
+
+> :information_source: Change adjective-noun.local to your StartOS hostname
+
+Run the following commands to install:
+
+```
+start-cli auth login
+# Enter your StartOS password
+start-cli --host https://adjective-noun.local package install burn-after-reading.s9pk
+```
+
+If you already have your `start-cli` config file setup with a default `host`,
+you can install simply by running:
 
 ```
 make install
 ```
 
-> **Tip:** You can also install the burn-after-reading.s9pk using **Sideload Service** under the **Embassy > Settings** section.
-
 ### Verify Install
 
-Go to your Embassy Services page, select **Burn After Reading**, configure and start the service. Then, verify its interfaces are accessible.
+Via the StartOS web-UI, select Services > **burn-after-reading**, configure and start the service. Then, verify its interfaces are accessible.
 
-#Done
+**Done!**

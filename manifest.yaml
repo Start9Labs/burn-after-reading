@@ -1,8 +1,13 @@
 id: burn-after-reading
 title: "Burn After Reading"
-version: 0.1.5
-release-notes: "Update to run on x86_64 architecture"
-license: gnu
+version: 0.1.6
+release-notes: |
+  * Base image updated to alpine 3.18
+  * Smaller and optimised build
+  * Standardized and optimized icon
+  * Build dependencies update
+  * Smaller package size
+license: GNU
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
 support-site: "https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com"
@@ -11,7 +16,7 @@ build: ["make"]
 description:
   short: Share messages and files that are destroyed after they are viewed
   long: |
-    A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Embassy, and there are no trusted 3rd parties.
+    A simple, fast, standalone service that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed. Content is stored directly on the Start9 server, and there are no trusted 3rd parties.
 assets:
   license: LICENSE
   icon: icon.png
