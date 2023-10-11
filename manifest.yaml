@@ -6,6 +6,7 @@ release-notes: |
   * Smaller and optimised build
   * Standardized and optimized icon
   * Build dependencies update
+  * Smaller package size
 license: GNU
 wrapper-repo: "https://github.com/Start9Labs/burn-after-reading"
 upstream-repo: "https://github.com/Start9Labs/burn-after-reading"
