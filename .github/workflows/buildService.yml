@@ -38,7 +38,7 @@ jobs:
         run: |
           sudo snap install yq deno
           sudo apt-get install -y build-essential openssl libssl-dev libc6-dev clang libclang-dev ca-certificates
-          cargo install toml-cli web-static-pack-packer
+          cargo install --force toml-cli web-static-pack-packer
       - name: Checkout services repository
         uses: actions/checkout@v3
       - name: Install Package Manager
