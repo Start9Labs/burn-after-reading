@@ -64,6 +64,7 @@
           Login
         </ion-button>
       </ion-label>
+      <ion-text *ngIf="config.isDemo && vars.state === WriteViewState.UNAUTH" color="medium">For this demo instance of Burn After Reading, the password is: 'demo'. You can host your own instance using StartOS.</ion-text>
     </div>
     <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
     <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
