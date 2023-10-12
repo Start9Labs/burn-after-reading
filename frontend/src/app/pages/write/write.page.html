@@ -48,7 +48,7 @@
           id="login-input"
           [type]="auth.masked ? 'password' : 'text'"
           [(ngModel)]="auth.value"
-          placeholder="Password"
+          [placeholder]="config.isDemo ? 'Enter &quot;demo&quot;' : 'Enter your password'"
           (keyup)="loginOnEnter($event)"
         ></ion-input>
         <ion-button size="small" slot="end" fill="clear" (click)="auth.masked = !auth.masked">
@@ -64,7 +64,7 @@
           Login
         </ion-button>
       </ion-label>
-      <ion-text *ngIf="config.isDemo && vars.state === WriteViewState.UNAUTH" color="medium">For this demo instance of Burn After Reading, the password is: 'demo'. You can host your own instance using StartOS.</ion-text>
+      <p *ngIf="config.isDemo && vars.state === WriteViewState.UNAUTH" class="ion-padding-start ion-padding-end">This instance of <a href="https://github.com/Start9Labs/burn-after-reading" noreferrer target="_blank">Burn After Reading</a> is hosted by <a href="https://start9.com" noreferrer target="_blank">Start9</a>. The password is "demo". To host a private instance of Burn After Reading, use <a href="https://github.com/Start9Labs/start-os" noreferrer target="_blank">StartOS</a>.</p>
     </div>
     <div class="shield middle-left-shield" [class.no-middle-left-shield]="!vars.shields"></div>
     <div class="shield middle-right-shield" [class.no-middle-right-shield]="!vars.shields"></div>
