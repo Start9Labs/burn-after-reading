@@ -46,7 +46,7 @@ verify: $(PKG_ID).s9pk
 
 install:
 ifeq (,$(wildcard ~/.embassy/config.yaml))
-	@echo; echo "You must define \"host: https://adjective-noun.local\" in ~/.embassy/config.yaml config file first"; echo
+	@echo; echo "You must define \"host: https://server-name.local\" in ~/.embassy/config.yaml config file first"; echo
 else
 	start-cli package install $(PKG_ID).s9pk
 endif

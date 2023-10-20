@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" alt="Project Logo" width="21%">
+</p>
+
 # Burn After Reading
 
 Burn After Reading is a simple, fast, standalone pastebin service for the [StartOS](https://github.com/start9Labs/start-os) that uses Tor (.onion) ephemeral links to share encrypted messages and files that are destroyed (burned) after they are viewed.
@@ -24,62 +28,49 @@ Install the system dependencies below to build this project by following the ins
 
 ## Cloning
 
-Clone the project locally:
+Clone the Burn After Reading Wrapper locally.
 
 ```
-git clone git@github.com:Start9Labs/burn-after-reading.git
-cd burn-after-reading
+git clone git@github.com:Start9Labs/burn-after-reading-startos.git
+cd burn-after-reading-startos
 ```
 
 ## Building
 
-After setting up your environment, build the `burn-after-reading` package by running:
+To build the **Burn After Reading** service as a universal package, run the following command:
 
 ```
 make
 ```
 
-To build the `burn-after-reading` package for a single platform, run:
+Alternatively the package can be built for individual architectures by specifying the architecture as follows:
 
 ```
-# for amd64
 make x86
 ```
 
 or
 
 ```
-# for arm64
 make arm
 ```
 
 ## Installing (on StartOS)
 
-Via the StartOS web-UI:
+Before installation, define `host: https://server-name.local` in your `~/.embassy/config.yaml` config file then run the following commands to determine successful install:
 
-Go to System > Sideload Service and select the burn-after-reading.s9pk file you built.
-
-Via CLI (SSH'd into your server):
-
-> :information_source: Change adjective-noun.local to your StartOS hostname
-
-Run the following commands to install:
+> :information_source: Change server-name.local to your Start9 server address
 
 ```
 start-cli auth login
-# Enter your StartOS password
-start-cli --host https://adjective-noun.local package install burn-after-reading.s9pk
-```
-
-If you already have your `start-cli` config file setup with a default `host`,
-you can install simply by running:
-
-```
+#Enter your StartOS password
 make install
 ```
 
-### Verify Install
+**Tip:** You can also install the burn-after-reading.s9pk by sideloading it under the **StartOS > System > Sideload a Service** section.
 
-Via the StartOS web-UI, select Services > **burn-after-reading**, configure and start the service. Then, verify its interfaces are accessible.
+## Verify Install
+
+Go to your StartOS Services page, select **Burn After Reading**, configure and start the service.
 
 **Done!**
