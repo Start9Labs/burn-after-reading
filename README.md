@@ -31,8 +31,8 @@ Install the system dependencies below to build this project by following the ins
 Clone the Burn After Reading Wrapper locally.
 
 ```
-git clone git@github.com:Start9Labs/burn-after-reading-startos.git
-cd burn-after-reading-startos
+git clone git@github.com:Start9Labs/burn-after-reading.git
+cd burn-after-reading
 ```
 
 ## Building
