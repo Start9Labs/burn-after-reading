@@ -30,7 +30,12 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       subcontainer: await sdk.SubContainer.of(
         effects,
         { imageId: 'bar' },
-        sdk.Mounts.of().addVolume('main', null, '/root', false),
+        sdk.Mounts.of().mountVolume({
+          volumeId: 'main',
+          subpath: null,
+          mountpoint: '/root',
+          readonly: false,
+        }),
         'bar-sub',
       ),
       command: ['tini', '/usr/local/bin/burn-after-reading'],
