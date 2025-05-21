@@ -1,6 +1,7 @@
-import { readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { sdk } from '../sdk'
 import { utils } from '@start9labs/start-sdk'
+import { pwdTxt } from '../fileModels/pwd.txt'
 
 export const resetPassword = sdk.Action.withoutInput(
   // id
@@ -27,8 +28,8 @@ export const resetPassword = sdk.Action.withoutInput(
       len: 22,
     })
 
-    // Save password to dir
-    await writeFile('pwd.txt', password)
+    // Save password to file
+    await pwdTxt.write(effects, password)
 
     return {
       version: '1',
