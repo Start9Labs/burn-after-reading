@@ -2,7 +2,7 @@ import { resetPassword } from '../actions/resetPassword'
 import { pwdTxt } from '../fileModels/pwd.txt'
 import { sdk } from '../sdk'
 
-export const taskShowSecretPhrase = sdk.setupOnInit(async (effects) => {
+export const taskResetPassword = sdk.setupOnInit(async (effects) => {
   if (!(await pwdTxt.read().const(effects))) {
     await sdk.action.createOwnTask(effects, resetPassword, 'critical', {
       reason:
