@@ -38,7 +38,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         }),
         'bar-sub',
       ),
-      command: ['tini', '/usr/local/bin/burn-after-reading'],
+      exec: { command: ['tini', '/usr/local/bin/burn-after-reading'] },
       ready: {
         display: 'Web Interface',
         fn: () =>
