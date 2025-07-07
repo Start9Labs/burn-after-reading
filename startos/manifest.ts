@@ -3,7 +3,7 @@ import { setupManifest } from '@start9labs/start-sdk'
 export const manifest = setupManifest({
   id: 'burn-after-reading',
   title: 'Burn After Reading',
-  license: 'mit',
+  license: 'MIT',
   wrapperRepo: 'https://github.com/Start9Labs/burn-after-reading',
   upstreamRepo: 'https://github.com/Start9Labs/burn-after-reading',
   supportSite: 'https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com',
