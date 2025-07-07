@@ -1,4 +1,3 @@
-import { readFile } from 'fs/promises'
 import { sdk } from '../sdk'
 import { utils } from '@start9labs/start-sdk'
 import { pwdTxt } from '../fileModels/pwd.txt'
@@ -9,7 +8,13 @@ export const resetPassword = sdk.Action.withoutInput(
 
   // metadata
   async ({ effects }) => {
-    const hasPass = await readFile('pwd.txt')
+    let hasPass = false
+    try {
+      const password = await pwdTxt.read().const(effects)
+      hasPass = !!password
+    } catch (error) {
+      hasPass = false
+    }
 
     return {
       name: hasPass ? 'Reset Password' : 'Create Password',
