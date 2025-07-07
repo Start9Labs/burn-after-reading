@@ -4,32 +4,35 @@ on:
   workflow_dispatch:
   pull_request:
     paths-ignore: ['*.md']
-    branches: ['main', 'master']
+    branches: ['main', 'master', 'update/040']
   push:
     paths-ignore: ['*.md']
-    branches: ['main', 'master']
+    branches: ['main', 'master', 'update/040']
 
 jobs:
   BuildPackage:
     runs-on: ubuntu-latest
     steps:
       - name: Prepare StartOS SDK
-        uses: Start9Labs/sdk@v1
+        uses: start9labs/sdk@v2
 
       - name: Checkout services repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build the service package
+        id: build
         run: |
-          git submodule update --init --recursive
-          start-sdk init
-          make
-          PACKAGE_ID=$(yq e ".id" manifest.yaml)
-          mv ${PACKAGE_ID}*s9pk ~/
+          start-cli init
+          RUST_LOG=debug RUST_BACKTRACE=1 make
+          PACKAGE_ID=$(start-cli s9pk inspect *.s9pk manifest | jq -r '.id')
+          echo "package_id=${PACKAGE_ID}" >> $GITHUB_ENV
+          printf "\n SHA256SUM: $(sha256sum ${PACKAGE_ID}.s9pk) \n"
         shell: bash
 
       - name: Upload .s9pk
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PACKAGE_ID }}.s9pk
-          path: ~/*.s9pk
+          name: ${{ env.package_id }}.s9pk
+          path: ./${{ env.package_id }}.s9pk
