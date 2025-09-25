@@ -1,98 +1,88 @@
-PKG_VERSION := $(shell yq e ".version" manifest.yaml)
-PKG_ID := $(shell yq e ".id" manifest.yaml)
-BACKEND_SRC := $(shell find ./backend/src/ -name '*.rs') backend/Cargo.toml backend/Cargo.lock
-FRONTEND_SRC := \
-	$(shell find ./frontend/src/) \
-	frontend/package.json \
-	frontend/browserslist \
-	frontend/ionic.config.json \
-	frontend/tsconfig.json \
-	frontend/fe-config.json
-TS_FILES := $(shell find . -name \*.ts )
+PACKAGE_ID := $(shell awk -F"'" '/id:/ {print $$2}' startos/manifest.ts)
+INGREDIENTS := $(shell start-cli s9pk list-ingredients 2>/dev/null)
 
+CMD_ARCH_GOAL := $(filter aarch64 x86_64 arm x86, $(MAKECMDGOALS))
+ifeq ($(CMD_ARCH_GOAL),)
+  BUILD := universal
+  S9PK := $(PACKAGE_ID).s9pk
+else
+  RAW_ARCH := $(firstword $(CMD_ARCH_GOAL))
+  ACTUAL_ARCH := $(patsubst x86,x86_64,$(patsubst arm,aarch64,$(RAW_ARCH)))
+  BUILD := $(ACTUAL_ARCH)
+  S9PK := $(PACKAGE_ID)_$(BUILD).s9pk
+endif
+
+.PHONY: all aarch64 x86_64 arm x86 clean install check-deps check-init package ingredients
 .DELETE_ON_ERROR:
 
-all: verify
+define SUMMARY
+	@manifest=$$(start-cli s9pk inspect $(1) manifest); \
+	size=$$(du -h $(1) | awk '{print $$1}'); \
+	title=$$(printf '%s' "$$manifest" | jq -r .title); \
+	version=$$(printf '%s' "$$manifest" | jq -r .version); \
+	arches=$$(printf '%s' "$$manifest" | jq -r '.hardwareRequirements.arch | join(", ")'); \
+	sdkv=$$(printf '%s' "$$manifest" | jq -r .sdkVersion); \
+	gitHash=$$(printf '%s' "$$manifest" | jq -r .gitHash | sed -E 's/(.*-modified)$$/\x1b[0;31m\1\x1b[0m/'); \
+	printf "\n"; \
+	printf "\033[1;32m✅ Build Complete!\033[0m\n"; \
+	printf "\n"; \
+	printf "\033[1;37m📦 $$title\033[0m   \033[36mv$$version\033[0m\n"; \
+	printf "───────────────────────────────\n"; \
+	printf " \033[1;36mFilename:\033[0m   %s\n" "$(1)"; \
+	printf " \033[1;36mSize:\033[0m       %s\n" "$$size"; \
+	printf " \033[1;36mArch:\033[0m       %s\n" "$$arches"; \
+	printf " \033[1;36mSDK:\033[0m        %s\n" "$$sdkv"; \
+	printf " \033[1;36mGit:\033[0m        %s\n" "$$gitHash"; \
+	echo ""
+endef
 
-arm:
-	@rm -f docker-images/x86_64.tar
-	@ARCH=aarch64 $(MAKE)
+all: $(PACKAGE_ID).s9pk
+	$(call SUMMARY,$(S9PK))
 
-x86:
-	@rm -f docker-images/aarch64.tar
-	@ARCH=x86_64 $(MAKE)
+$(BUILD): $(PACKAGE_ID)_$(BUILD).s9pk
+	$(call SUMMARY,$(S9PK))
+
+x86: x86_64
+arm: aarch64
+
+$(S9PK): $(INGREDIENTS) .git/HEAD .git/index
+	@$(MAKE) --no-print-directory ingredients
+	@echo "   Packing '$(S9PK)'..."
+	BUILD=$(BUILD) start-cli s9pk pack -o $(S9PK)
+
+ingredients: $(INGREDIENTS)
+	@echo "   Re-evaluating ingredients..."
+
+install: package | check-deps check-init
+	@HOST=$$(awk -F'/' '/^host:/ {print $$3}' ~/.startos/config.yaml); \
+	if [ -z "$$HOST" ]; then \
+		echo "Error: You must define \"host: http://server-name.local\" in ~/.startos/config.yaml"; \
+		exit 1; \
+	fi; \
+	echo "\n🚀 Installing to $$HOST ..."; \
+	start-cli package install -s $(S9PK)
+
+check-deps:
+	@command -v start-cli >/dev/null || \
+		(echo "Error: start-cli not found. Please see https://docs.start9.com/latest/developer-guide/sdk/installing-the-sdk" && exit 1)
+	@command -v npm >/dev/null || \
+		(echo "Error: npm not found. Please install Node.js and npm." && exit 1)
+
+check-init:
+	@if [ ! -f ~/.startos/developer.key.pem ]; then \
+		echo "Initializing StartOS developer environment..."; \
+		start-cli init; \
+	fi
+
+javascript/index.js: $(shell find startos -type f) tsconfig.json node_modules
+	npm run build
+
+node_modules: package-lock.json
+	npm ci
+
+package-lock.json: package.json
+	npm i
 
 clean:
-	rm -rf frontend/dist
-	rm -rf frontend/node_modules
-	rm -rf backend/target
-	rm -rf docker-images
-	rm -f $(PKG_ID).s9pk 
-
-frontend/package.json: manifest.yaml
-	cat frontend/package.json | jq '.version = "$(PKG_VERSION)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
-	cat frontend/package.json | jq '.description = "$(shell yq e ".description.long" manifest.yaml)"' > frontend/package.json.tmp && mv frontend/package.json.tmp frontend/package.json
-
-frontend/node_modules: frontend/package.json
-	npm --prefix frontend ci
-
-frontend/dist: $(FRONTEND_SRC) frontend/node_modules
-	npm --prefix frontend run build
-
-verify: $(PKG_ID).s9pk
-	@start-sdk verify s9pk $(PKG_ID).s9pk
-	@echo " Done!"
-	@echo "   Filesize: $(shell du -h $(PKG_ID).s9pk) is ready"
-
-install:
-ifeq (,$(wildcard ~/.embassy/config.yaml))
-	@echo; echo "You must define \"host: https://server-name.local\" in ~/.embassy/config.yaml config file first"; echo
-else
-	start-cli package install $(PKG_ID).s9pk
-endif
-
-$(PKG_ID).s9pk: manifest.yaml LICENSE instructions.md icon.png scripts/embassy.js docker-images/aarch64.tar docker-images/x86_64.tar
-ifeq ($(ARCH),aarch64)
-	@echo "start-sdk: Preparing aarch64 package ..."
-else ifeq ($(ARCH),x86_64)
-	@echo "start-sdk: Preparing x86_64 package ..."
-else
-	@echo "start-sdk: Preparing Universal Package ..."
-endif
-	@start-sdk pack
-
-docker-images/x86_64.tar: Dockerfile backend/target/x86_64-unknown-linux-musl/release/burn-after-reading
-ifeq ($(ARCH),aarch64)
-else
-	mkdir -p docker-images
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/burn-after-reading/main:$(PKG_VERSION) --platform=linux/amd64 --build-arg ARCH=x86_64 -o type=docker,dest=docker-images/x86_64.tar .
-endif
-
-docker-images/aarch64.tar: Dockerfile backend/target/aarch64-unknown-linux-musl/release/burn-after-reading
-ifeq ($(ARCH),x86_64)
-else
-	mkdir -p docker-images
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/burn-after-reading/main:$(PKG_VERSION) --platform=linux/arm64 --build-arg ARCH=aarch64 -o type=docker,dest=docker-images/aarch64.tar .
-endif
-
-backend/target/x86_64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
-ifeq ($(ARCH),aarch64)
-else
-	docker run --rm -t -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src messense/rust-musl-cross:x86_64-musl cargo build --release
-endif
-
-backend/target/aarch64-unknown-linux-musl/release/burn-after-reading: $(BACKEND_SRC) backend/src/ui.pack
-ifeq ($(ARCH),x86_64)
-else
-	docker run --rm -t -v ~/.cargo/registry:/root/.cargo/registry -v "$(shell pwd)"/backend:/home/rust/src messense/rust-musl-cross:aarch64-musl cargo build --release
-endif
-
-backend/Cargo.toml: manifest.yaml
-	toml set backend/Cargo.toml package.version "$(PKG_VERSION)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
-	toml set backend/Cargo.toml package.description "$(shell yq e ".description.long" manifest.yaml)" > backend/Cargo.toml.tmp && mv backend/Cargo.toml.tmp backend/Cargo.toml
-
-backend/src/ui.pack: frontend/dist
-	web-static-pack-packer frontend/dist backend/src/ui.pack
-
-scripts/embassy.js: $(TS_FILES)
-	deno bundle scripts/embassy.ts scripts/embassy.js
+	@echo "Cleaning up build artifacts..."
+	@rm -rf $(PACKAGE_ID).s9pk $(PACKAGE_ID)_x86_64.s9pk $(PACKAGE_ID)_aarch64.s9pk javascript node_modules

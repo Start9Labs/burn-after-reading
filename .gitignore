@@ -1,7 +1,8 @@
-burn-after-reading.db
-burn-after-reading.s9pk
+*.s9pk
+startos/*.js
+node_modules/
 .DS_Store
-frontend/.angular
 .vscode/
 docker-images
-scripts/*.js
+javascript
+ncc-cache
