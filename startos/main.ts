@@ -7,7 +7,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
    *
    * In this section, we fetch any resources or run any desired preliminary commands.
    */
-  console.info('Starting Burn After Reading!')
+  console.info('[i] Starting Burn After Reading!')
 
   /**
    * ======================== Daemons ========================

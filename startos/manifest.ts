@@ -1,4 +1,10 @@
 import { setupManifest } from '@start9labs/start-sdk'
+import { SDKImageInputSpec } from '@start9labs/start-sdk/base/lib/types/ManifestTypes'
+
+const BUILD = process.env.BUILD || ''
+
+const architectures =
+  BUILD === 'x86_64' || BUILD === 'aarch64' ? [BUILD] : ['x86_64', 'aarch64']
 
 export const manifest = setupManifest({
   id: 'burn-after-reading',
@@ -9,6 +15,7 @@ export const manifest = setupManifest({
   supportSite: 'https://matrix.to/#/!lMnRwPWnyQvOfAoEnD:matrix.start9labs.com',
   marketingSite: 'https://start9.com',
   donationUrl: null,
+  docsUrl: 'https://github.com/Start9Labs/burn-after-reading/blob/update/040/docs/README.md',
   description: {
     short:
       'Sharing private messages and files that are destroyed after they are viewed.',
@@ -20,9 +27,10 @@ export const manifest = setupManifest({
       source: {
         dockerBuild: {},
       },
-    },
+      arch: architectures,
+    } as SDKImageInputSpec,
   },
-  hardwareRequirements: {},
+  hardwareRequirements: { arch: architectures },
   alerts: {
     install: null,
     update: null,
